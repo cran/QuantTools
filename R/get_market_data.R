@@ -25,9 +25,9 @@
 #' @name get_market_data
 #' @details
 #' Use external websites to get desired symbol name for
-#' \href{http://www.finam.ru/profile/moex-akcii/sberbank/export/}{Finam},
-#' \href{http://www.iqfeed.net/symbolguide/index.cfm?symbolguide=lookup}{IQFeed},
-#' \href{http://finance.yahoo.com/}{Yahoo} and
+#' \href{https://www.finam.ru/profile/moex-akcii/sberbank/export/}{Finam},
+#' \href{https://www.iqfeed.net/symbolguide/index.cfm?symbolguide=lookup}{IQFeed},
+#' \href{https://finance.yahoo.com/}{Yahoo} and
 #' \href{https://www.google.com/finance}{Google} sources. \cr
 #' Note: Timestamps timezones set to UTC. \cr
 #' It is recommended to store tick market data locally.
@@ -181,7 +181,7 @@ get_finam_data = function( symbol, from, to = from, period = 'day', local = FALS
 
   }
   # Finam host address
-  host = '195.128.78.52'
+  host = 'export.finam.ru'
   # referer to successfully download data from Finam server
   referer = 'http://www.finam.ru/analysis/profile041CA00007/default.asp'
   # urls of Finam instruments information files
@@ -266,7 +266,7 @@ get_finam_data = function( symbol, from, to = from, period = 'day', local = FALS
     cn = symbol, # ticker
     dtf = 1, # date format
     tmf = 3, # time format
-    MSOR = 0, # cnadle time 0 - candle start,1 - candle end
+    MSOR = 1, # candle time 0 - candle start,1 - candle end
     mstimever = 0,
     sep = 1, # column separator    1 - ",", 2 - ".", 3 - ";", 4 - "<tab>", 5 - " "
     sep2 = 1, # thousands separator 1 - "" , 2 - ".", 3 - ",", 4 - " "    , 5 - "'"

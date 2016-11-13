@@ -35,9 +35,9 @@ Download historical market data
 }
 \details{
 Use external websites to get desired symbol name for
-\href{http://www.finam.ru/profile/moex-akcii/sberbank/export/}{Finam},
-\href{http://www.iqfeed.net/symbolguide/index.cfm?symbolguide=lookup}{IQFeed},
-\href{http://finance.yahoo.com/}{Yahoo} and
+\href{https://www.finam.ru/profile/moex-akcii/sberbank/export/}{Finam},
+\href{https://www.iqfeed.net/symbolguide/index.cfm?symbolguide=lookup}{IQFeed},
+\href{https://finance.yahoo.com/}{Yahoo} and
 \href{https://www.google.com/finance}{Google} sources. \cr
 Note: Timestamps timezones set to UTC. \cr
 It is recommended to store tick market data locally.

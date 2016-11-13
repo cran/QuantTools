@@ -72,6 +72,8 @@ private:
   double marketValueMax;
   bool   isDrawdownMax;
 
+  Rcpp::CharacterVector timeZone;
+
   void FormCandle( Tick tick ) {
 
     bool startOver = candle.time != floor( tick.time / timeFrame ) * timeFrame + timeFrame;
@@ -127,6 +129,7 @@ public:
     marketValueMax    = 1;
     isDrawdownMax     = false;
     tick = {};
+    timeZone          = "UTC";
 
   };
 
@@ -328,6 +331,8 @@ public:
     Rcpp::NumericVector  prices  = ticks[ "price"  ];
     Rcpp::IntegerVector  volumes = ticks[ "volume" ];
 
+    timeZone = times.attr( "tzone" );
+
     size_t n = times.size();
 
     Tick tick;
@@ -402,7 +407,9 @@ public:
     Rcpp::NumericVector  high  ( n );
     Rcpp::NumericVector  low   ( n );
     Rcpp::NumericVector  close ( n );
-    Rcpp::DatetimeVector time  ( n );
+    Rcpp::NumericVector  time  ( n );
+    time.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    time.attr( "tzone" ) = timeZone;
     Rcpp::IntegerVector  volume( n );
 
     for( int i = 0; i < n; i++ ){
@@ -446,8 +453,14 @@ public:
     Rcpp::IntegerVector   id_trade      ( n );
     Rcpp::IntegerVector   id_sent       ( n );
     Rcpp::IntegerVector   id_processed  ( n );
-    Rcpp::DatetimeVector  time_sent     ( n );
-    Rcpp::DatetimeVector  time_processed( n );
+    Rcpp::NumericVector   time_sent     ( n );
+    Rcpp::NumericVector   time_processed( n );
+
+    time_sent.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    time_sent.attr( "tzone" ) = timeZone;
+    time_processed.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    time_processed.attr( "tzone" ) = timeZone;
+
     Rcpp::NumericVector   price_init    ( n );
     Rcpp::NumericVector   price_exec    ( n );
     Rcpp::IntegerVector   side          ( n );
@@ -510,9 +523,17 @@ public:
     Rcpp::IntegerVector  side       ( n );
     Rcpp::NumericVector  price_enter( n );
     Rcpp::NumericVector  price_exit ( n );
-    Rcpp::DatetimeVector time_sent  ( n );
-    Rcpp::DatetimeVector time_enter ( n );
-    Rcpp::DatetimeVector time_exit  ( n );
+    Rcpp::NumericVector  time_sent  ( n );
+    Rcpp::NumericVector  time_enter ( n );
+    Rcpp::NumericVector  time_exit  ( n );
+
+    time_sent.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    time_sent.attr( "tzone" ) = timeZone;
+    time_enter.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    time_enter.attr( "tzone" ) = timeZone;
+    time_exit.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    time_exit.attr( "tzone" ) = timeZone;
+
     Rcpp::NumericVector  pnl        ( n );
     Rcpp::NumericVector  mtm_min    ( n );
     Rcpp::NumericVector  mtm_max    ( n );
@@ -644,10 +665,26 @@ public:
 
     int nDaysDrawdownMax = std::isnan( drawdownMaxEnd ) ? NA_INTEGER : NNights( drawdownMaxStart, drawdownMaxEnd );
 
+
+    Rcpp::NumericVector  from( 1, std::isnan( timeFirstTick ) ? NA_REAL : timeFirstTick );
+    Rcpp::NumericVector  to( 1, std::isnan( timeLastTick  ) ? NA_REAL : timeLastTick );
+    Rcpp::NumericVector  max_dd_start( 1, std::isnan( drawdownMaxStart ) ? NA_REAL: drawdownMaxStart );
+    Rcpp::NumericVector  max_dd_end( 1, std::isnan( drawdownMaxEnd   ) ? NA_REAL: drawdownMaxEnd );
+
+    from.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    from.attr( "tzone" ) = timeZone;
+    to.attr( "class" )   = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    to.attr( "tzone" )   = timeZone;
+    max_dd_start.attr( "class" )   = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    max_dd_start.attr( "tzone" )   = timeZone;
+    max_dd_end.attr( "class" )   = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
+    max_dd_end.attr( "tzone" )   = timeZone;
+
+
     Rcpp::DataFrame summary = ListBuilder()
 
-      .Add( "from"          , Rcpp::Datetime( std::isnan( timeFirstTick ) ? NA_REAL : timeFirstTick ) )
-      .Add( "to"            , Rcpp::Datetime( std::isnan( timeLastTick  ) ? NA_REAL : timeLastTick ) )
+      .Add( "from"          , from )
+      .Add( "to"            , to )
       .Add( "days_tested"   , nDaysTested )
       .Add( "days_traded"   , nDaysTraded )
       .Add( "n_per_day"     , nTradesPerDay )
@@ -665,8 +702,8 @@ public:
       .Add( "loss"          , totalLoss )
       .Add( "pnl"           , totalPnl )
       .Add( "max_dd"        , -std::round( drawdownMax  * percent / roundPrecision ) * roundPrecision )
-      .Add( "max_dd_start"  , Rcpp::Datetime( std::isnan( drawdownMaxStart ) ? NA_REAL: drawdownMaxStart ) )
-      .Add( "max_dd_end"    , Rcpp::Datetime( std::isnan( drawdownMaxEnd   ) ? NA_REAL: drawdownMaxEnd   ) )
+      .Add( "max_dd_start"  , max_dd_start )
+      .Add( "max_dd_end"    , max_dd_end )
       .Add( "max_dd_length" , nDaysDrawdownMax );
 
     return summary;

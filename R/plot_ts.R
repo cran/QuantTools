@@ -44,7 +44,7 @@
 #' time_series <- get_finam_data( 'SBER', '2014-01-10', '2014-08-13', period = '10min' )
 #'
 #' plot_ts( time_series[ time %bw% '2014-08-13', list( time, open, high, low, close ) ] )
-#' plot_ts( time_series[ time %bw% '2014-08-13', list( time, vol = vol / 1e6 )  ] , type = 'h' )
+#' plot_ts( time_series[ time %bw% '2014-08-13', list( time, volume = volume / 1e6 )  ] , type = 'h' )
 #' plot_ts( time_series[ time %bw% '2014-08', list( time, close ) ] )
 #' plot_ts( time_series[ , list( time, close ) ] )
 #' }
@@ -251,7 +251,7 @@ plot_ts_frame = function( xlim, ylim, resolution = 'auto', log = par( 'ylog' ), 
   V1 = NULL
   if( mins_grid ){
 
-    t_m = basis[, seq( round_POSIXct( t_from, '10min' ), round_POSIXct( t_to, '10min' ), as.difftime( 10, units = 'mins' ) ), by = 1:nrow( basis )  ][, V1]
+    t_m = basis[, seq( round_POSIXct( t_from, 10, 'min', floor ), round_POSIXct( t_to, 10, 'min', ceiling ), as.difftime( 10, units = 'mins' ) ), by = 1:nrow( basis )  ][, V1]
     x_m = t_to_x( t_m )
     if( is.na( x_m[1] ) ) {
       t_m[1] = basis[ 1, t_from ]
@@ -262,7 +262,7 @@ plot_ts_frame = function( xlim, ylim, resolution = 'auto', log = par( 'ylog' ), 
   }
   if( hour_grid ){
 
-    t_h = basis[, seq( round_POSIXct( t_from, 'hour' ), round_POSIXct( t_to, 'hour' ), as.difftime( 1, units = 'hours' ) ), by = 1:nrow( basis )  ][, V1]
+    t_h = basis[, seq( round_POSIXct( t_from, 1, 'hour', floor ), round_POSIXct( t_to, 1, 'hour', ceiling ), as.difftime( 1, units = 'hours' ) ), by = 1:nrow( basis )  ][, V1]
     x_h = t_to_x( t_h )
     if( is.na( x_h[1] ) ) {
       t_h[1] = basis[ 1, t_from ]

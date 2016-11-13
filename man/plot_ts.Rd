@@ -59,7 +59,7 @@ As for OHLC series, only one can be plotted and should be passed as \code{times_
 time_series <- get_finam_data( 'SBER', '2014-01-10', '2014-08-13', period = '10min' )
 
 plot_ts( time_series[ time \%bw\% '2014-08-13', list( time, open, high, low, close ) ] )
-plot_ts( time_series[ time \%bw\% '2014-08-13', list( time, vol = vol / 1e6 )  ] , type = 'h' )
+plot_ts( time_series[ time \%bw\% '2014-08-13', list( time, volume = volume / 1e6 )  ] , type = 'h' )
 plot_ts( time_series[ time \%bw\% '2014-08', list( time, close ) ] )
 plot_ts( time_series[ , list( time, close ) ] )
 }

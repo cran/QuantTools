@@ -19,32 +19,25 @@
 #' Round POSIXct timestamps
 #'
 #' @param x POSIXct vector
+#' @param n number of units to round off
 #' @param units to round off to
-#' @param type \code{floor} or \code{ceiling}
+#' @param method round method, see \link[base]{Round}
 #' @details
-#' Rounds POSIXct vector.
+#' Rounds POSIXct vector with specified method.
 #'
-#'
+#' @name round_POSIXct
 #' @export
-round_POSIXct <- function(x, units = c('seconds',"minutes", "5min", "10min", "15min", "30min","hour","day"), type = 'floor' ){
-  if(is.numeric(units)) units <- as.character(units)
+round_POSIXct = function( x, n = 1, units = c( 'secs','mins', 'hours' ), method = round ) {
 
-  units <- match.arg(units)
+  units <- match.arg( units )
+  r = n * switch( units, 'secs'  = 1, 'mins'  = 60, 'hours'  = 60 * 60 )
+  as.POSIXct( method( as.numeric( x ) / r ) * r, tz = attr( x, 'tzone' ), origin = '1970-01-01' )
 
-  if(units == 'day') return(as.Date(x))
-
-  r <- switch(units,
-    "seconds" = 1,
-    "minutes" = 60,
-    "5min"  = 60*5,
-    "10min" = 60*10,
-    "15min" = 60*15,
-    "30min" = 60*30,
-    "hour"  = 60*60
-  )
-
-  res <- as.numeric(x) - (as.numeric(x) %% r) + r * (type == 'ceiling')
-  ret <- as.POSIXct( res,origin = '1970-01-01', tz = attributes(x)$tzone )
-
-  return(ret)
 }
+#' @rdname round_POSIXct
+#' @export
+ceiling_POSIXct = function( x, n = 1, units = c( 'secs','mins', 'hours' ) ) round_POSIXct( x, n, units, method = ceiling )
+#' @rdname round_POSIXct
+#' @export
+trunc_POSIXct = function( x, n = 1, units = c( 'secs','mins', 'hours' ) ) round_POSIXct( x, n, units, method = trunc )
+
