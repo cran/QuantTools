@@ -123,6 +123,17 @@ roll_max <- function(x, n) {
     .Call('QuantTools_roll_max', PACKAGE = 'QuantTools', x, n)
 }
 
+#' @title Rolling Standard Deviation
+#' @name roll_sd
+#' @param x numeric vector
+#' @param n window size
+#' @family technical indicators
+#' @description Rolling standard deviation shows standard deviation over n past values.
+#' @export
+roll_sd <- function(x, n) {
+    .Call('QuantTools_roll_sd', PACKAGE = 'QuantTools', x, n)
+}
+
 #'
 #' @title Rolling Filter
 #' @name roll_sd_filter
@@ -134,17 +145,6 @@ roll_max <- function(x, n) {
 #' @export
 roll_sd_filter <- function(x, n, k = 1, m = 10L) {
     .Call('QuantTools_roll_sd_filter', PACKAGE = 'QuantTools', x, n, k, m)
-}
-
-#' @title Rolling Standard Deviation
-#' @name roll_sd
-#' @param x numeric vector
-#' @param n window size
-#' @family technical indicators
-#' @description Rolling standard deviation shows standard deviation over n past values.
-#' @export
-roll_sd <- function(x, n) {
-    .Call('QuantTools_roll_sd', PACKAGE = 'QuantTools', x, n)
 }
 
 #' @title Rolling Volume Profile

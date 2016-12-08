@@ -23,8 +23,10 @@
 #include "Candle.h"
 #include "Cost.h"
 #include "Tick.h"
-#include "../setDT.h"
+#include "Statistics.h"
+#include "../CppToR.h"
 #include "../ListBuilder.h"
+#include "../NPeriods.h"
 #include <map>
 #include <cmath>
 #include <Rcpp.h>
@@ -32,6 +34,7 @@
 class Processor {
 
   friend class Test;
+  friend class Statistics;
 
 private:
 
@@ -39,18 +42,17 @@ private:
   std::vector< std::string > TradeSideString  = { "long", "short" };
   std::vector< std::string > OrderTypeString  = { "market", "limit" };
   std::vector< std::string > OrderStateString = { "new", "registered", "executed", "cancelling", "cancelled" };
-  std::vector< std::string > TradeStateString  = { "new", "opened", "closed" };
+  std::vector< std::string > TradeStateString = { "new", "opened", "closed" };
 
   std::vector<Order*> orders;
   std::vector<Order*> ordersProcessed;
 
   std::map< int, Trade*> trades;
+  std::map< int, Trade*> tradesProcessed;
 
   std::vector<Candle> candles;
-  int    position;
-  double positionValue;
-  int    positionPlanned;
-  Tick   tick;
+
+  double prevTickTime;
   double latencySend;
   double latencyReceive;
   int    timeFrame;
@@ -58,30 +60,19 @@ private:
 
   Cost   cost;
 
-  int    nDaysTested;
-  double timeFirstTick;
-  double timeLastTick;
-  double drawdownMax;
-  double drawdownMaxStart;
-  double drawdownMaxEnd;
-  double drawdown;
-  double drawdownStart;
-  double drawdownEnd;
-  double pnl;
-  double marketValue;
-  double marketValueMax;
-  bool   isDrawdownMax;
+  std::string timeZone;
 
-  Rcpp::CharacterVector timeZone;
-
-  void FormCandle( Tick tick ) {
+  void FormCandle( const Tick& tick ) {
 
     bool startOver = candle.time != floor( tick.time / timeFrame ) * timeFrame + timeFrame;
 
     if( startOver and candle.time != 0 ) {
 
       if( onCandle != nullptr ) onCandle( candle );
+
       candles.push_back( candle );
+
+      statistics.Update( candle );
 
     }
 
@@ -89,19 +80,15 @@ private:
 
   };
 
-  int NNights( double time1, double time2 ) {
-
-    const int nSecondsInDay = 60 * 60 * 24;
-    return std::abs( std::trunc( time1 / nSecondsInDay ) - std::trunc( time2 / nSecondsInDay ) );
-
-  }
-
 public:
 
-  std::function< void( Tick   ) > onTick;
-  std::function< void( Candle ) > onCandle;
+  Statistics statistics;
+
+  std::function< void( const Tick&   ) > onTick;
+  std::function< void( const Candle& ) > onCandle;
 
   Processor( int timeFrame, double latencySend = 0.001, double latencyReceive = 0.001 ) :
+
     latencySend   ( latencySend    ),
     latencyReceive( latencyReceive ),
     timeFrame     ( timeFrame      ),
@@ -109,94 +96,42 @@ public:
 
   {
 
-    cost              = {};
-    position          = 0;
-    positionValue     = 0;
-    positionPlanned   = 0;
-    nDaysTested       = 0;
-
-    nDaysTested       = 0;
-    timeFirstTick     = NAN;
-    timeLastTick      = NAN;
-    drawdownMax       = 0;
-    drawdownMaxStart  = NAN;
-    drawdownMaxEnd    = NAN;
-    drawdown          = 0;
-    drawdownStart     = NAN;
-    drawdownEnd       = NAN;
-    pnl               = 0;
-    marketValue       = 1;
-    marketValueMax    = 1;
-    isDrawdownMax     = false;
-    tick = {};
-    timeZone          = "UTC";
+    Reset();
+    timeZone = "UTC";
 
   };
 
-  ~Processor() {
-
-    for( auto order: orders ) delete order;
-    orders.clear();
-
-    for( auto order: ordersProcessed ) delete order;
-    ordersProcessed.clear();
-
-    for( auto r: trades ) delete r.second;
-    trades.clear();
-
-  }
+  ~Processor() { Reset(); }
 
   void SetCost( Cost cost ) { this->cost = cost; }
 
   void Feed( const Tick& tick ) {
 
-    if( tick.time < this->tick.time ) { throw std::invalid_argument( "ticks must be time ordered tick.id = " + std::to_string( tick.id + 1 ) ); }
+    if( tick.time < prevTickTime ) { throw std::invalid_argument( "ticks must be time ordered tick.id = " + std::to_string( tick.id + 1 ) ); }
 
     FormCandle( tick );
 
     if( onTick != nullptr ) onTick( tick );
 
-    int nNights = NNights( this->tick.time, tick.time );
+    for( auto it = orders.begin(); it != orders.end();  ) {
 
-    if( nDaysTested == 0 ) { nDaysTested = 1; }
-    if( nNights > 0      ) { nDaysTested++;   }
-    if( std::isnan( timeFirstTick ) ) { timeFirstTick = tick.time; }
-    timeLastTick = tick.time;
-
-    for( auto order: orders ) {
+      Order* order = (*it);
 
       order->Update( tick, latencySend, latencyReceive );
 
-      if( order->IsExecuted() ) {
-
-        if( order->side == OrderSide::BUY ) {
-
-          if( position == -1 ) positionValue = order->priceExecuted;
-          if( position >=  0 ) positionValue = ( positionValue * position + order->priceExecuted ) / ( position + 1 );
-          position++;
-          positionPlanned--;
-
-        } else {
-
-          if( position ==  1 ) positionValue = order->priceExecuted;
-          if( position <=  0 ) positionValue = ( positionValue * position - order->priceExecuted ) / ( position - 1 );
-          position--;
-          positionPlanned++;
-
-        }
-
-      }
-      if( order->IsCancelled() ) { order->side == OrderSide::BUY ? positionPlanned-- : positionPlanned++; }
+      statistics.Update( order );
 
       if( trades.count( order->idTrade ) == 0 ) {
 
-        Trade* trade = new Trade;
-        trade->idTrade = order->idTrade;
-        trade->state = TradeState::NEW;
-        trade->idSent = order->idSent;
+        Trade* trade    = new Trade;
+
+        trade->idTrade  = order->idTrade;
+        trade->state    = TradeState::NEW;
+        trade->idSent   = order->idSent;
         trade->timeSent = order->timeSent;
-        trade->side = order->IsBuy() ? TradeSide::LONG : TradeSide::SHORT;
-        trade->cost = cost.order;
+        trade->side     = order->IsBuy() ? TradeSide::LONG : TradeSide::SHORT;
+        trade->cost     = cost.order;
+
         trades[ order->idTrade ] = trade;
 
       } else {
@@ -204,24 +139,23 @@ public:
         Trade* trade = trades[ order->idTrade ];
         if( order->IsExecuted() ) {
 
-          if( trade->state == TradeState::OPENED ) {
+          if( trade->IsOpened() ) {
 
-            trade->idExit = order->idProcessed;
-            trade->timeExit = order->timeProcessed;
+            trade->idExit    = order->idProcessed;
+            trade->timeExit  = order->timeProcessed;
             trade->priceExit = order->priceExecuted;
-            trade->pnl    = ( trade->side == TradeSide::LONG ? +1. : -1. ) * ( trade->priceExit - trade->priceEnter ) * cost.pointValue + trade->cost;
-            trade->pnlRel = trade->pnl / ( trade->priceEnter * cost.pointValue );
+            trade->pnl       = ( trade->IsLong() ? +1. : -1. ) * ( trade->priceExit - trade->priceEnter ) * cost.pointValue + trade->cost;
+            trade->pnlRel    = trade->pnl / ( trade->priceEnter * cost.pointValue );
+            trade->state     = TradeState::CLOSED;
 
-            pnl += trade->pnlRel;
-
-            trade->state = TradeState::CLOSED;
+            statistics.Update( trade );
 
           }
 
-          if( trade->state == TradeState::NEW ) {
+          if( trade->IsNew() ) {
 
-            trade->idEnter = order->idProcessed;
-            trade->timeEnter = order->timeProcessed;
+            trade->idEnter    = order->idProcessed;
+            trade->timeEnter  = order->timeProcessed;
             trade->priceEnter = order->priceExecuted;
 
             trade->state = TradeState::OPENED;
@@ -232,90 +166,99 @@ public:
 
         }
 
-        if( nNights > 0 ) {
-
-          trade->cost += nNights * ( trade->side == TradeSide::LONG ? cost.longAbs : cost.shortAbs );
-          trade->cost += nNights * ( trade->side == TradeSide::LONG ? cost.longRel : cost.shortRel ) * this->tick.price * cost.pointValue;
-
-        }
-
         if( order->IsNew()       ) { trade->cost += cost.order;  }
         if( order->IsCancelled() ) { trade->cost += cost.cancel; }
 
-        if( trade->state == TradeState::OPENED ) {
-
-          double mtm    = ( trade->side == TradeSide::LONG ? +1. : -1. ) * ( tick.price - trade->priceEnter );
-          double mtmRel = ( trade->side == TradeSide::LONG ? +1. : -1. ) * ( tick.price / trade->priceEnter - 1 );
-          if( trade->mtmMax < mtm ) trade->mtmMax = mtm;
-          if( trade->mtmMin > mtm ) trade->mtmMin = mtm;
-          if( trade->mtmMaxRel < mtmRel ) trade->mtmMaxRel = mtmRel;
-          if( trade->mtmMinRel > mtmRel ) trade->mtmMinRel = mtmRel;
-
-        }
         trade->costRel = trade->cost / ( trade->priceEnter * cost.pointValue );
 
       }
 
-    }
+      if( order->IsExecuted() or order->IsCancelled() ) {
 
-    for( auto it = orders.begin(); it != orders.end();  ) {
-
-      if( ( *it )->state == OrderState::EXECUTED or ( *it )->state == OrderState::CANCELLED ) {
-
-        ordersProcessed.push_back( *it );
+        ordersProcessed.push_back( order );
         it = orders.erase( it );
 
       } else ++it;
 
     }
 
-    marketValue = 1 + pnl + position * ( tick.price / positionValue - 1 );
+    for( auto it = trades.begin(); it != trades.end();  ) {
 
-    if( marketValueMax < marketValue ) marketValueMax = marketValue;
+      Trade* trade = it->second;
 
-    double prevDrowdown = drawdown;
-    drawdown = ( 1 - marketValue / marketValueMax );
+      if( trade->IsOpened() ) {
 
-    // drawdown started
-    if( prevDrowdown == 0 and drawdown > 0 ) {
+        int nNights = NNights( prevTickTime, tick.time );
 
-      drawdownStart = tick.time;
-      drawdownEnd   = NAN;
+        if( nNights > 0 ) {
 
-    }
-    // drawdown ended
-    if( prevDrowdown > 0 and drawdown == 0 ) {
+          trade->cost += nNights * ( trade->IsLong() ? cost.longAbs : cost.shortAbs );
+          trade->cost += nNights * ( trade->IsLong() ? cost.longRel : cost.shortRel ) * candles.back().close * cost.pointValue;
 
-      drawdownEnd = tick.time;
+        }
 
-      // max drawdown recovered
-      if( isDrawdownMax ) {
+        double mtm = ( trade->IsLong() ? +1. : -1. ) * ( tick.price - trade->priceEnter );
 
-        drawdownMaxEnd = drawdownEnd;
-        isDrawdownMax = false;
+        if( trade->mtmMax < mtm ) {
+
+          trade->mtmMax    = mtm;
+          trade->mtmMaxRel = mtm / trade->priceEnter;
+
+        }
+        if( trade->mtmMin > mtm ) {
+
+          trade->mtmMin    = mtm;
+          trade->mtmMinRel = mtm / trade->priceEnter;
+
+        }
 
       }
 
-    }
-    // drawdown is highest ever
-    if( drawdownMax < drawdown ) {
+      if( trade->IsClosed() ) {
 
-      drawdownMax = drawdown;
-      drawdownMaxStart = drawdownStart;
-      drawdownMaxEnd = NAN;
-      isDrawdownMax = true;
+        tradesProcessed[it->first] = trade;
+        it = trades.erase( it );
+
+      } else ++it;
 
     }
 
-    this->tick = tick;
-    /*
-    Rcpp::Rcout << "position: " << position << " value: " << positionValue << " planned: " << positionPlanned <<
+    statistics.Update( tick );
 
-      " pnl: " << pnl << " mtm: " << pnlMtm << " fixed: " << pnlFixed << " dd: " << drawdown << std::endl;
-    */
+    prevTickTime = tick.time;
+
+  }
+
+  Statistics GetStatistics() { return statistics; }
+
+  void Feed( Rcpp::NumericVector times, Rcpp::NumericVector prices, Rcpp::IntegerVector volumes ) {
+
+    if( times.size() != prices.size() or times.size() != volumes.size() or prices.size() != volumes.size() ) {
+
+      throw std::invalid_argument( "times, prices and volumes must have equal lengths" );
+
+    }
+
+    auto n = times.size();
+
+    Tick tick;
+
+    for( auto id = 0; id < n; id++ ) {
+
+      tick.id = id;
+      tick.time = times[id];
+      tick.price = prices[id];
+      tick.volume = volumes[id];
+      Feed( tick );
+
+    }
+
+    statistics.Finalize();
+
   }
 
   void Feed( Rcpp::DataFrame ticks ) {
+
 
     Rcpp::StringVector names = ticks.attr( "names" );
 
@@ -331,38 +274,44 @@ public:
     Rcpp::NumericVector  prices  = ticks[ "price"  ];
     Rcpp::IntegerVector  volumes = ticks[ "volume" ];
 
-    timeZone = times.attr( "tzone" );
+    std::vector<std::string> tzone = times.attr( "tzone" );
 
-    size_t n = times.size();
+    if( tzone.empty() ) throw std::invalid_argument( "ticks timezone must be set" );
+
+    timeZone = tzone[0];
+
+    auto n = times.size();
 
     Tick tick;
 
-    for( size_t id = 0; id < n; id++ ) {
+    for( auto id = 0; id < n; id++ ) {
 
-      tick.id = id;
-      tick.time = times[id];
-      tick.price = prices[id];
+      tick.id     = id;
+      tick.time   = times[id];
+      tick.price  = prices[id];
       tick.volume = volumes[id];
       Feed( tick );
 
     }
+
+    statistics.Finalize();
 
   }
 
   void SendOrder( Order* order ) {
 
     orders.push_back( order );
-    positionPlanned += order->side == OrderSide::BUY ? +1 : -1;
+    statistics.Update( order );
 
   }
 
   void CancelOrders() { for( auto order: orders ) order->Cancel( ); }
 
-  int GetPosition() { return position; }
+  int GetPosition() { return statistics.position; }
 
-  int GetPositionPlanned() { return positionPlanned; }
+  int GetPositionPlanned() { return statistics.positionPlanned; }
 
-  double GetMarketValue() { return marketValue * 100; }
+  double GetMarketValue() { return statistics.marketValue * 100; }
 
   void Reset() {
 
@@ -375,26 +324,27 @@ public:
     for( auto r: trades ) delete r.second;
     trades.clear();
 
-    cost              = {};
-    position          = 0;
-    positionValue     = 0;
-    positionPlanned   = 0;
-    nDaysTested       = 0;
+    for( auto r: tradesProcessed ) delete r.second;
+    tradesProcessed.clear();
 
-    nDaysTested       = 0;
-    timeFirstTick     = NAN;
-    timeLastTick      = NAN;
-    drawdownMax       = 0;
-    drawdownMaxStart  = NAN;
-    drawdownMaxEnd    = NAN;
-    drawdown          = 0;
-    drawdownStart     = NAN;
-    drawdownEnd       = NAN;
-    pnl               = 0;
-    marketValue       = 1;
-    marketValueMax    = 1;
-    isDrawdownMax     = false;
-    tick = {};
+    statistics.Reset();
+    prevTickTime = 0;
+  }
+
+  std::vector<double> GetOnCandleMarketValueHistory() {  return statistics.onCandleHistoryMarketValue;  }
+
+  std::vector<double> GetOnCandleDrawDownHistory() {  return statistics.onCandleHistoryDrawDown;  }
+
+  Rcpp::List GetOnDayClosePerformanceHistory() {
+
+    Rcpp::DataFrame performance = ListBuilder()
+
+    .Add( "date"       , IntToDate( statistics.onDayCloseHistoryDates ) )
+    .Add( "return"     , statistics.onDayCloseHistoryMarketValueChange  )
+    .Add( "pnl"        , statistics.onDayCloseHistoryMarketValue        )
+    .Add( "drawdown"   , statistics.onDayCloseHistoryDrawDown           );
+
+    return performance;
 
   }
 
@@ -402,313 +352,184 @@ public:
 
     int n = candles.size();
 
-    Rcpp::IntegerVector  id    ( n );
-    Rcpp::NumericVector  open  ( n );
-    Rcpp::NumericVector  high  ( n );
-    Rcpp::NumericVector  low   ( n );
-    Rcpp::NumericVector  close ( n );
-    Rcpp::NumericVector  time  ( n );
-    time.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    time.attr( "tzone" ) = timeZone;
-    Rcpp::IntegerVector  volume( n );
+    Rcpp::IntegerVector id    ( n );
+    Rcpp::NumericVector open  ( n );
+    Rcpp::NumericVector high  ( n );
+    Rcpp::NumericVector low   ( n );
+    Rcpp::NumericVector close ( n );
+    Rcpp::NumericVector time  = DoubleToDateTime( std::vector<double>( n ), timeZone );
+    Rcpp::IntegerVector volume( n );
 
-    for( int i = 0; i < n; i++ ){
+    int i = 0;
+    auto convertCandle = [&]( std::vector<Candle>::iterator it ) {
 
-      id    [i] = candles[i].id;
-      open  [i] = candles[i].open;
-      high  [i] = candles[i].high;
-      low   [i] = candles[i].low;
-      close [i] = candles[i].close;
-      time  [i] = candles[i].time;
-      volume[i] = candles[i].volume;
+      id    [i] = it->id + 1;
+      open  [i] = it->open;
+      high  [i] = it->high;
+      low   [i] = it->low;
+      close [i] = it->close;
+      time  [i] = it->time;
+      volume[i] = it->volume;
 
-    }
+      i++;
 
-    Rcpp::List candles = Rcpp::List::create(
+    };
 
-      Rcpp::Named( "time"   ) = time,
-      Rcpp::Named( "open"   ) = open,
-      Rcpp::Named( "high"   ) = high,
-      Rcpp::Named( "low"    ) = low,
-      Rcpp::Named( "close"  ) = close,
-      Rcpp::Named( "volume" ) = volume,
-      Rcpp::Named( "id"     ) = id + 1
+    for( auto it = candles.begin(); it != candles.end(); it++ ) convertCandle( it );
 
-    );
+    Rcpp::DataFrame candles = ListBuilder()
 
-    setDT( candles );
+      .Add( "time"  , time   )
+      .Add( "open"  , open   )
+      .Add( "high"  , high   )
+      .Add( "low"   , low    )
+      .Add( "close" , close  )
+      .Add( "volume", volume )
+      .Add( "id"    , id     );
 
-    return candles;
+      return candles;
 
   }
 
   Rcpp::List GetOrders() {
 
-    std::vector< Order* > all_orders;
-    for( auto order: ordersProcessed ) all_orders.push_back( order );
-    for( auto order: orders ) all_orders.push_back( order );
-
-    int n = all_orders.size();
+    int n = orders.size() + ordersProcessed.size();
 
     Rcpp::IntegerVector   id_trade      ( n );
     Rcpp::IntegerVector   id_sent       ( n );
     Rcpp::IntegerVector   id_processed  ( n );
-    Rcpp::NumericVector   time_sent     ( n );
-    Rcpp::NumericVector   time_processed( n );
-
-    time_sent.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    time_sent.attr( "tzone" ) = timeZone;
-    time_processed.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    time_processed.attr( "tzone" ) = timeZone;
-
+    Rcpp::NumericVector   time_sent      = DoubleToDateTime( std::vector<double>( n ), timeZone );
+    Rcpp::NumericVector   time_processed = DoubleToDateTime( std::vector<double>( n ), timeZone );
     Rcpp::NumericVector   price_init    ( n );
     Rcpp::NumericVector   price_exec    ( n );
-    Rcpp::IntegerVector   side          ( n );
-    Rcpp::IntegerVector   type          ( n );
-    Rcpp::IntegerVector   state         ( n );
+    Rcpp::IntegerVector   side           = IntToFactor( std::vector<int>( n ), OrderSideString );
+    Rcpp::IntegerVector   type           = IntToFactor( std::vector<int>( n ), OrderTypeString );
+    Rcpp::IntegerVector   state          = IntToFactor( std::vector<int>( n ), OrderStateString );
     Rcpp::CharacterVector comment       ( n );
 
-    for( int i = 0; i < n; i++ ) {
+    int i = 0;
+    auto convertOrder = [&]( Order* order ) {
 
-      id_trade      [i] = all_orders[i]->idTrade;
-      id_sent       [i] = all_orders[i]->idSent + 1;
-      id_processed  [i] = all_orders[i]->idProcessed + 1;
-      time_sent     [i] = all_orders[i]->timeSent;
-      time_processed[i] = all_orders[i]->timeProcessed;
-      price_init    [i] = all_orders[i]->price;
-      price_exec    [i] = all_orders[i]->priceExecuted;
-      side          [i] = (int)all_orders[i]->side + 1;
-      type          [i] = (int)all_orders[i]->type + 1;
-      state         [i] = (int)all_orders[i]->state + 1;
-      comment       [i] = all_orders[i]->comment;
+      id_trade      [i] = order->idTrade;
+      id_sent       [i] = order->idSent + 1;
+      id_processed  [i] = order->idProcessed + 1;
+      time_sent     [i] = order->timeSent;
+      time_processed[i] = order->timeProcessed;
+      price_init    [i] = order->price;
+      price_exec    [i] = order->priceExecuted;
+      side          [i] = (int)order->side + 1;
+      type          [i] = (int)order->type + 1;
+      state         [i] = (int)order->state + 1;
+      comment       [i] = order->comment;
 
-    }
-    side.attr( "levels" ) = Rcpp::wrap( OrderSideString );
-    side.attr( "class" ) = "factor";
-    type.attr( "levels" ) = Rcpp::wrap( OrderTypeString );
-    type.attr( "class" ) = "factor";
-    state.attr( "levels" ) = Rcpp::wrap( OrderStateString );
-    state.attr( "class" ) = "factor";
+      i++;
 
-    Rcpp::List orders = Rcpp::List::create(
+    };
 
-      Rcpp::Named( "id_trade"       ) = id_trade,
-      Rcpp::Named( "id_sent"        ) = id_sent,
-      Rcpp::Named( "id_processed"   ) = id_processed,
-      Rcpp::Named( "time_sent"      ) = time_sent,
-      Rcpp::Named( "time_processed" ) = time_processed,
-      Rcpp::Named( "price_init"     ) = price_init,
-      Rcpp::Named( "price_exec"     ) = price_exec,
-      Rcpp::Named( "side"           ) = side,
-      Rcpp::Named( "type"           ) = type,
-      Rcpp::Named( "state"          ) = state,
-      Rcpp::Named( "comment"        ) = comment
+    for( auto it = ordersProcessed.begin(); it != ordersProcessed.end(); it++ ) convertOrder( *it );
+    for( auto it = orders         .begin(); it != orders         .end(); it++ ) convertOrder( *it );
 
-    );
+    Rcpp::DataFrame orders = ListBuilder()
 
-    setDT( orders );
+      .Add( "id_trade"      , id_trade       )
+      .Add( "id_sent"       , id_sent        )
+      .Add( "id_processed"  , id_processed   )
+      .Add( "time_sent"     , time_sent      )
+      .Add( "time_processed", time_processed )
+      .Add( "price_init"    , price_init     )
+      .Add( "price_exec"    , price_exec     )
+      .Add( "side"          , side           )
+      .Add( "type"          , type           )
+      .Add( "state"         , state          )
+      .Add( "comment"       , comment        );
 
-    return orders;
+      return orders;
 
   }
 
   Rcpp::List GetTrades() {
 
-    int n = trades.size();
+    int n = trades.size() + tradesProcessed.size();
 
-    Rcpp::IntegerVector  id_trade   ( n );
-    Rcpp::IntegerVector  id_sent    ( n );
-    Rcpp::IntegerVector  id_enter   ( n );
-    Rcpp::IntegerVector  id_exit    ( n );
-    Rcpp::IntegerVector  side       ( n );
-    Rcpp::NumericVector  price_enter( n );
-    Rcpp::NumericVector  price_exit ( n );
-    Rcpp::NumericVector  time_sent  ( n );
-    Rcpp::NumericVector  time_enter ( n );
-    Rcpp::NumericVector  time_exit  ( n );
-
-    time_sent.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    time_sent.attr( "tzone" ) = timeZone;
-    time_enter.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    time_enter.attr( "tzone" ) = timeZone;
-    time_exit.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    time_exit.attr( "tzone" ) = timeZone;
-
-    Rcpp::NumericVector  pnl        ( n );
-    Rcpp::NumericVector  mtm_min    ( n );
-    Rcpp::NumericVector  mtm_max    ( n );
-    Rcpp::NumericVector  cost       ( n );
-    Rcpp::NumericVector  pnl_rel    ( n );
-    Rcpp::NumericVector  mtm_min_rel( n );
-    Rcpp::NumericVector  mtm_max_rel( n );
-    Rcpp::NumericVector  cost_rel   ( n );
-    Rcpp::IntegerVector  state      ( n );
+    Rcpp::IntegerVector id_trade   ( n );
+    Rcpp::IntegerVector id_sent    ( n );
+    Rcpp::IntegerVector id_enter   ( n );
+    Rcpp::IntegerVector id_exit    ( n );
+    Rcpp::IntegerVector side       = IntToFactor( std::vector<int>( n ), TradeSideString );
+    Rcpp::NumericVector price_enter( n );
+    Rcpp::NumericVector price_exit ( n );
+    Rcpp::NumericVector time_sent  = DoubleToDateTime( std::vector<double>( n ), timeZone );
+    Rcpp::NumericVector time_enter = DoubleToDateTime( std::vector<double>( n ), timeZone );
+    Rcpp::NumericVector time_exit  = DoubleToDateTime( std::vector<double>( n ), timeZone );
+    Rcpp::NumericVector pnl        ( n );
+    Rcpp::NumericVector mtm_min    ( n );
+    Rcpp::NumericVector mtm_max    ( n );
+    Rcpp::NumericVector cost       ( n );
+    Rcpp::NumericVector pnl_rel    ( n );
+    Rcpp::NumericVector mtm_min_rel( n );
+    Rcpp::NumericVector mtm_max_rel( n );
+    Rcpp::NumericVector cost_rel   ( n );
+    Rcpp::IntegerVector state      = IntToFactor( std::vector<int>( n ), TradeStateString );
 
     const int basisPoints = 10000;
-    const double moneyPrecision = 0.0001;
 
     int i = 0;
-    for( const auto &r : trades ) {
+    auto convertTrade = [&]( Trade* trade ) {
 
-      id_trade   [i] = r.first;
-      id_sent    [i] = r.second->idSent;
-      id_enter   [i] = r.second->idEnter;
-      id_exit    [i] = r.second->idExit;
-      time_sent  [i] = r.second->timeSent;
-      time_enter [i] = r.second->timeEnter;
-      time_exit  [i] = r.second->timeExit;
-      side       [i] = (int)r.second->side + 1;
-      price_enter[i] = r.second->priceEnter;
-      price_exit [i] = r.second->priceExit;
-      pnl        [i] = std::round( r.second->pnl / moneyPrecision ) * moneyPrecision;
-      mtm_min    [i] = r.second->mtmMin;
-      mtm_max    [i] = r.second->mtmMax;
-      cost       [i] = std::round( r.second->cost / moneyPrecision ) * moneyPrecision;
-      pnl_rel    [i] = std::rint( r.second->pnlRel * basisPoints );
-      mtm_min_rel[i] = std::rint( r.second->mtmMinRel * basisPoints );
-      mtm_max_rel[i] = std::rint( r.second->mtmMaxRel * basisPoints );
-      cost_rel   [i] = std::rint( r.second->costRel * basisPoints );
-      state      [i] = (int)r.second->state + 1;
+      id_trade   [i] = trade->idTrade;
+      id_sent    [i] = trade->idSent  + 1;
+      id_enter   [i] = trade->idEnter + 1;
+      id_exit    [i] = trade->idExit  + 1;
+      time_sent  [i] = trade->timeSent;
+      time_enter [i] = trade->timeEnter;
+      time_exit  [i] = trade->timeExit;
+      side       [i] = (int)trade->side + 1;
+      price_enter[i] = trade->priceEnter;
+      price_exit [i] = trade->priceExit;
+      pnl        [i] = trade->pnl;
+      mtm_min    [i] = trade->mtmMin;
+      mtm_max    [i] = trade->mtmMax;
+      cost       [i] = trade->cost;
+      pnl_rel    [i] = trade->pnlRel    * basisPoints;
+      mtm_min_rel[i] = trade->mtmMinRel * basisPoints;
+      mtm_max_rel[i] = trade->mtmMaxRel * basisPoints;
+      cost_rel   [i] = trade->costRel   * basisPoints;
+      state      [i] = (int)trade->state + 1;
 
       i++;
 
-    }
-    side.attr( "levels" ) = Rcpp::wrap( TradeSideString );
-    side.attr( "class" ) = "factor";
+    };
 
-    state.attr( "levels" ) = Rcpp::wrap( TradeStateString );
-    state.attr( "class" ) = "factor";
+    for( auto it = tradesProcessed.begin(); it != tradesProcessed.end(); it++ ) convertTrade( it->second );
+    for( auto it = trades         .begin(); it != trades         .end(); it++ ) convertTrade( it->second );
 
-    Rcpp::List output = Rcpp::List::create(
+    Rcpp::DataFrame trades = ListBuilder()
 
-      Rcpp::Named( "id_trade"    ) = id_trade,
-      Rcpp::Named( "id_sent"     ) = id_sent + 1,
-      Rcpp::Named( "id_enter"    ) = id_enter + 1,
-      Rcpp::Named( "id_exit"     ) = id_exit + 1,
-      Rcpp::Named( "time_sent"   ) = time_sent,
-      Rcpp::Named( "time_enter"  ) = time_enter,
-      Rcpp::Named( "time_exit"   ) = time_exit,
-      Rcpp::Named( "side"        ) = side,
-      Rcpp::Named( "price_enter" ) = price_enter,
-      Rcpp::Named( "price_exit"  ) = price_exit,
-      Rcpp::Named( "pnl"         ) = pnl,
-      Rcpp::Named( "mtm_min"     ) = mtm_min,
-      Rcpp::Named( "mtm_max"     ) = mtm_max,
-      Rcpp::Named( "cost"        ) = cost,
-      Rcpp::Named( "pnl_rel"     ) = pnl_rel,
-      Rcpp::Named( "mtm_min_rel" ) = mtm_min_rel,
-      Rcpp::Named( "mtm_max_rel" ) = mtm_max_rel,
-      Rcpp::Named( "cost_rel"    ) = cost_rel,
-      Rcpp::Named( "state"       ) = state
+      .Add( "id_trade"   , id_trade    )
+      .Add( "id_sent"    , id_sent     )
+      .Add( "id_enter"   , id_enter    )
+      .Add( "id_exit"    , id_exit     )
+      .Add( "time_sent"  , time_sent   )
+      .Add( "time_enter" , time_enter  )
+      .Add( "time_exit"  , time_exit   )
+      .Add( "side"       , side        )
+      .Add( "price_enter", price_enter )
+      .Add( "price_exit" , price_exit  )
+      .Add( "pnl"        , pnl         )
+      .Add( "mtm_min"    , mtm_min     )
+      .Add( "mtm_max"    , mtm_max     )
+      .Add( "cost"       , cost        )
+      .Add( "pnl_rel"    , pnl_rel     )
+      .Add( "mtm_min_rel", mtm_min_rel )
+      .Add( "mtm_max_rel", mtm_max_rel )
+      .Add( "cost_rel"   , cost_rel    )
+      .Add( "state"      , state       );
 
-    );
-
-    setDT( output );
-
-    return output;
+      return trades;
 
   }
 
-  Rcpp::List GetSummary() {
-
-    int    nTrades      = 0;
-    int    nTradesWin   = 0;
-    int    nTradesLoss  = 0;
-    int    nTradesLong  = 0;
-    int    nTradesShort = 0;
-    double totalWin     = 0;
-    double totalLoss    = 0;
-    double totalPnl     = 0;
-
-    std::map< int, int > uniqueDates;
-    const int nSecondsInDay = 60 * 60 * 24;
-    const int basisPoints = 10000;
-    const int percent = 100;
-    const double roundPrecision = 0.01;
-
-    for( auto&& r : trades ) {
-
-      if( r.second->state != TradeState::CLOSED ) continue;
-      nTrades++;
-      if( r.second->pnlRel > 0 ) {
-
-        nTradesWin++;
-        totalWin += r.second->pnlRel;
-
-      } else {
-
-        nTradesLoss++;
-        totalLoss += r.second->pnlRel;
-
-      }
-
-      r.second->side == TradeSide::LONG ? nTradesLong++ : nTradesShort++;
-
-      totalPnl += r.second->pnlRel;
-      uniqueDates[ std::trunc( r.second->timeEnter / nSecondsInDay ) ] = 0;
-      uniqueDates[ std::trunc( r.second->timeExit  / nSecondsInDay ) ] = 0;
-
-    }
-    int nDaysTraded = uniqueDates.size();
-    double nTradesPerDay = nDaysTested == 0 ? 0 : std::round( nTrades * 1. / nDaysTested / roundPrecision ) * roundPrecision;
-
-    double pctTradesWin  = nTrades == 0 ? NA_REAL : std::round( nTradesWin  * 1. / nTrades * percent / roundPrecision ) * roundPrecision;
-    double pctTradesLoss = nTrades == 0 ? NA_REAL : std::round( nTradesLoss * 1. / nTrades * percent / roundPrecision ) * roundPrecision;
-
-    double avgWin  = nTradesWin  == 0 ? NA_REAL : std::round( totalWin  / nTradesWin  * basisPoints / roundPrecision ) * roundPrecision;
-    double avgLoss = nTradesLoss == 0 ? NA_REAL : std::round( totalLoss / nTradesLoss * basisPoints / roundPrecision ) * roundPrecision;
-    double avgPnl  = nTrades     == 0 ? NA_REAL : std::round( totalPnl  / nTrades     * basisPoints / roundPrecision ) * roundPrecision;
-
-    totalWin  = std::round( totalWin  * percent / roundPrecision ) * roundPrecision;
-    totalLoss = std::round( totalLoss * percent / roundPrecision ) * roundPrecision;
-    totalPnl  = std::round( totalPnl  * percent / roundPrecision ) * roundPrecision;
-
-    int nDaysDrawdownMax = std::isnan( drawdownMaxEnd ) ? NA_INTEGER : NNights( drawdownMaxStart, drawdownMaxEnd );
-
-
-    Rcpp::NumericVector  from( 1, std::isnan( timeFirstTick ) ? NA_REAL : timeFirstTick );
-    Rcpp::NumericVector  to( 1, std::isnan( timeLastTick  ) ? NA_REAL : timeLastTick );
-    Rcpp::NumericVector  max_dd_start( 1, std::isnan( drawdownMaxStart ) ? NA_REAL: drawdownMaxStart );
-    Rcpp::NumericVector  max_dd_end( 1, std::isnan( drawdownMaxEnd   ) ? NA_REAL: drawdownMaxEnd );
-
-    from.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    from.attr( "tzone" ) = timeZone;
-    to.attr( "class" )   = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    to.attr( "tzone" )   = timeZone;
-    max_dd_start.attr( "class" )   = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    max_dd_start.attr( "tzone" )   = timeZone;
-    max_dd_end.attr( "class" )   = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    max_dd_end.attr( "tzone" )   = timeZone;
-
-
-    Rcpp::DataFrame summary = ListBuilder()
-
-      .Add( "from"          , from )
-      .Add( "to"            , to )
-      .Add( "days_tested"   , nDaysTested )
-      .Add( "days_traded"   , nDaysTraded )
-      .Add( "n_per_day"     , nTradesPerDay )
-      .Add( "n"             , nTrades )
-      .Add( "n_long"        , nTradesLong )
-      .Add( "n_short"       , nTradesShort )
-      .Add( "n_win"         , nTradesWin )
-      .Add( "n_loss"        , nTradesLoss )
-      .Add( "pct_win"       , pctTradesWin )
-      .Add( "pct_loss"      , pctTradesLoss )
-      .Add( "avg_win"       , avgWin )
-      .Add( "avg_loss"      , avgLoss )
-      .Add( "avg_pnl"       , avgPnl )
-      .Add( "win"           , totalWin )
-      .Add( "loss"          , totalLoss )
-      .Add( "pnl"           , totalPnl )
-      .Add( "max_dd"        , -std::round( drawdownMax  * percent / roundPrecision ) * roundPrecision )
-      .Add( "max_dd_start"  , max_dd_start )
-      .Add( "max_dd_end"    , max_dd_end )
-      .Add( "max_dd_length" , nDaysDrawdownMax );
-
-    return summary;
-
-  }
+  Rcpp::DataFrame GetSummary() { return statistics.GetSummary(); }
 
 };
 

@@ -45,6 +45,6 @@ std::vector< double > roll_correlation( Rcpp::NumericVector x, Rcpp::NumericVect
 
   for( auto i = 0; i < x.size(); i++ ) lm.Add( std::pair< double, double >( x[i], y[i] ) );
 
-  return lm.GetRHistry();
+  return lm.GetRHistory();
 
 }

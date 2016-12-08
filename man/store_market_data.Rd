@@ -4,11 +4,14 @@
 \alias{store_finam_data}
 \alias{store_iqfeed_data}
 \alias{store_market_data}
+\alias{store_moex_data}
 \title{Store historical market data}
 \usage{
 store_finam_data(from = NULL, to = format(Sys.Date()), verbose = TRUE)
 
 store_iqfeed_data(from = NULL, to = format(Sys.Date()), verbose = TRUE)
+
+store_moex_data(from = NULL, to = format(Sys.Date()), verbose = TRUE)
 }
 \arguments{
 \item{from, to}{text dates in format \code{"YYYY-mm-dd"}}
@@ -52,7 +55,7 @@ QuantTools_settings( settings )
 # set local = TRUE to load from just created local market data storage
 get_finam_data( 'GAZP', '2016-09-01', '2016-09-28', 'tick', local = T )
 
-## iqfeed data storage
+## IQFeed data storage
 settings = list(
   # set storage path, it is perfect to use Solid State Drive for data storage
   # it is no problem to move storage folder just don't forget to set new path in settings
@@ -79,6 +82,34 @@ QuantTools_settings( settings )
 
 # set local = TRUE to load from just created local market data storage
 get_iqfeed_data( 'AAPL', format( Sys.Date() - 3 ), format( Sys.Date() ), 'tick', local = T )
+
+## MOEX data storage
+settings = list(
+  # set MOEX data url
+  moex_data_url = 'url/to/moex/data',
+  # set storage path, it is perfect to use Solid State Drive for data storage
+  # it is no problem to move storage folder just don't forget to set new path in settings
+  moex_storage = paste( path.expand('~') , 'Market Data', 'moex', sep = '/' ),
+  # and set storage start date
+  moex_storage_from = '2003-01-01'
+)
+QuantTools_settings( settings )
+# now it is time to add some data into storage. You have three options here:
+
+  # 1 update storage with data from last date available until today
+  # it is very convenient to create a script with this function and
+  # run it every time you need to update your storage
+  store_moex_data()
+
+  # 2 update storage with data from last date available until specified date
+  store_moex_data( to = format( Sys.Date() ) )
+
+  # 3 update storage with data between from and to dates,
+  # if data already present it will be overwritten
+  store_moex_data( from = format( Sys.Date() - 3 ), to = format( Sys.Date() ) )
+
+# set local = TRUE to load from just created local market data storage
+get_moex_futures_data( 'RIH9', '2009-01-01', '2009-02-01', 'tick', local = T )
 
 }
 }

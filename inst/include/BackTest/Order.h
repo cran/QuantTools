@@ -45,6 +45,7 @@ enum class OrderStateExchange: int {
 class Order {
 
   friend class Processor;
+  friend class Statistics;
   friend class Test;
 
   private:
@@ -213,6 +214,7 @@ class Order {
       comment( comment )
 
     {
+
       priceExecuted = NA_REAL;
       idProcessed   = NA_INTEGER - 1;
       idSent        = NA_INTEGER - 1;

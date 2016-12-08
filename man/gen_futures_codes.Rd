@@ -2,18 +2,26 @@
 % Please edit documentation in R/gen_futures_codes.R
 \name{gen_futures_codes}
 \alias{gen_futures_codes}
-\title{Generate futures contract names between dates}
+\title{Generate futures contract codes and schedule between dates}
 \usage{
-gen_futures_codes(contract, from, to, frequency)
+gen_futures_codes(contract, from, to, frequency, day_exp,
+  year_last_digit = FALSE)
 }
 \arguments{
 \item{contract}{contract base name}
 
-\item{from, to}{text dates in format YYYY-MM-DD}
+\item{from, to}{text dates in format \code{"YYYY-MM-DD"}}
 
 \item{frequency}{expiration frequency, e.g. 3 for quarterly contracts}
+
+\item{day_exp}{expiration day number, e.g. 15 for middle of month}
+
+\item{year_last_digit}{should only last digit of year present in code?}
+}
+\value{
+returns \code{data.table} with columns \code{code, from, to, contract_id}.
 }
 \description{
-Generate futures contract names between dates
+Generate futures contract codes and schedule between dates
 }
 

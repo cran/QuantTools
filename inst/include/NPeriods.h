@@ -15,12 +15,36 @@
 // You should have received a copy of the GNU General Public License
 // along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef BACKTEST_H
-#define BACKTEST_H
+#ifndef NPERIODS_H
+#define NPERIODS_H
 
-#include "BackTest/Processor.h"
-#include "Indicators.h"
+constexpr const int nSecondsInDay = 60 * 60 * 24;
+constexpr const int nSecondsInHour = 60 * 60;
+constexpr const int nHoursInDay = 24;
 
-#endif //BACKTEST_H
 
+inline int NNights( double time1, double time2 ) {
 
+  return std::abs( (int)time1 / nSecondsInDay - (int)time2 / nSecondsInDay );
+
+}
+
+inline int NDays( double time1, double time2 ) { return NNights( time1, time2 ); }
+
+inline double NHours( double time ) {
+
+  double x =  time / nSecondsInHour;
+
+  return x - (int)x / nHoursInDay * nHoursInDay;
+
+  //return std::fmod( time / nSecondsInHour, nHoursInDay );
+
+}
+
+inline double NHours( double time1, double time2 ) {
+
+  return std::abs( time1 - time2 ) / nSecondsInHour;
+
+}
+
+#endif //NPERIODS_H

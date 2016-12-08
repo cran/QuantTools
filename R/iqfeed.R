@@ -471,6 +471,7 @@ NULL
     names = c( 'time','price','volume','size','bid','ask','tick_id','basis_for_last', 'trade_market_center', 'trade_conditions' )
     setnames( x, names )
 
+    time = NULL
     x[, time := fasttime::fastPOSIXct( time, 'UTC' ) ]
 
     return( x[] )
@@ -501,16 +502,68 @@ NULL
 }
 
 .get_iqfeed_candles = function( symbol, from, to, time_from = '', time_to = '', interval = 3600 ){
-  cmd = paste( "HIT",symbol, interval,from = gsub( '-|:','', from ), to = gsub( '-|:','', to ),"", time_from, time_to, 1, "\r\n", sep = "," )
-  x = .get_iqfeed( cmd )
-  if( is.null( x ) ) return( NULL )
-  x = x[, c( 1:5,7 ), with = FALSE ]
-  setnames( x, c( 'time', 'high', 'low', 'open', 'close', 'volume' ) )
-  setcolorder( x, c( 'time', 'open', 'high', 'low', 'close', 'volume' ) )
 
-  x[, time := fasttime::fastPOSIXct( time, 'UTC' ) ]
+  get_iqfeed_candles = function( symbol, from, to, time_from = '', time_to = '', interval = 3600 ) {
+
+    cmd = paste( "HIT",symbol, interval,from = gsub( '-|:','', from ), to = gsub( '-|:','', to ),"", time_from, time_to, 1, "\r\n", sep = "," )
+    x = .get_iqfeed( cmd )
+    if( is.null( x ) ) return( NULL )
+    x = x[, c( 1:5,7 ), with = FALSE ]
+    setnames( x, c( 'time', 'high', 'low', 'open', 'close', 'volume' ) )
+    setcolorder( x, c( 'time', 'open', 'high', 'low', 'close', 'volume' ) )
+
+    x[, time := fasttime::fastPOSIXct( time, 'UTC' ) ]
+
+    return( x[] )
+
+  }
+
+  if( interval == 60 & as.Date( to ) - as.Date( from ) > 500 ) {
+
+    # split data into 500 days chunks
+    dates = seq( as.Date( from ), as.Date( to ), length.out = ceiling( as.numeric( as.Date( to ) - as.Date( from ) ) / 500 ) + 1  )
+    if( length( dates ) == 1 ){
+      periods = data.table(
+        from = dates,
+        to = dates + 1
+      )
+    }else{
+      periods = data.table(
+        from = dates[-length(dates)],
+        to = dates[-1] + 1
+      )
+      periods[ -1, from := from + 1 ]
+    }
+
+    x = periods[, {
+
+      candles = get_iqfeed_candles( symbol, from, to, time_from, time_to, interval )
+      if( !is.null( candles ) ) {
+
+        time = open = high = low = close = volume = NULL
+        candles[ time < as.POSIXct( paste( to, '00:00:01' ), tz = 'UTC' ),
+                 list(
+                   time,
+                   open  = as.double( open  ),
+                   high  = as.double( high  ),
+                   low   = as.double( low   ),
+                   close = as.double( close ),
+                   volume
+                   ) ]
+
+      }
+
+    }, by = 1:nrow( periods ) ]
+    x[, nrow := NULL ]
+
+  } else {
+
+    x = get_iqfeed_candles( symbol, from, to, time_from, time_to, interval )
+
+  }
 
   return( x[] )
+
 }
 
 .get_iqfeed_recent_daily_candles = function( symbol, days = 10 ){

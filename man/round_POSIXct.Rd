@@ -6,12 +6,12 @@
 \alias{trunc_POSIXct}
 \title{Round POSIXct timestamps}
 \usage{
-round_POSIXct(x, n = 1, units = c("secs", "mins", "hours"),
+round_POSIXct(x, n = 1, units = c("secs", "mins", "hours", "days"),
   method = round)
 
-ceiling_POSIXct(x, n = 1, units = c("secs", "mins", "hours"))
+ceiling_POSIXct(x, n = 1, units = c("secs", "mins", "hours", "days"))
 
-trunc_POSIXct(x, n = 1, units = c("secs", "mins", "hours"))
+trunc_POSIXct(x, n = 1, units = c("secs", "mins", "hours", "days"))
 }
 \arguments{
 \item{x}{POSIXct vector}

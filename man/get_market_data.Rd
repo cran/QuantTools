@@ -5,6 +5,9 @@
 \alias{get_google_data}
 \alias{get_iqfeed_data}
 \alias{get_market_data}
+\alias{get_moex_continuous_futures_data}
+\alias{get_moex_futures_data}
+\alias{get_moex_options_data}
 \alias{get_yahoo_data}
 \alias{get_yahoo_splits_and_dividends}
 \title{Download historical market data}
@@ -18,6 +21,14 @@ get_google_data(symbol, from, to = from)
 get_finam_data(symbol, from, to = from, period = "day", local = FALSE)
 
 get_iqfeed_data(symbol, from, to = from, period = "day", local = FALSE)
+
+get_moex_options_data(code, from, to = from, period = "tick",
+  local = TRUE)
+
+get_moex_futures_data(code, from, to = from, period = "tick",
+  local = TRUE)
+
+get_moex_continuous_futures_data(contract, from, to, frequency, day_exp)
 }
 \arguments{
 \item{symbol}{symbol name}
@@ -28,7 +39,11 @@ get_iqfeed_data(symbol, from, to = from, period = "day", local = FALSE)
 
 \item{period}{candle period \code{tick, 1min, 5min, 10min, 15min, 30min, hour, day, week, month}}
 
-\item{local}{should data be loaded from local storage? Only 'tick' period supported for local storage. See 'Details' section}
+\item{local}{should data be loaded from local storage? See 'Details' section}
+
+\item{code}{futures or option code name, e.g. \code{"RIU6"}}
+
+\item{contract, frequency, day_exp}{same as in \code{\link{gen_futures_codes}}}
 }
 \description{
 Download historical market data
@@ -36,6 +51,7 @@ Download historical market data
 \details{
 Use external websites to get desired symbol name for
 \href{https://www.finam.ru/profile/moex-akcii/sberbank/export/}{Finam},
+\href{https://www.moex.com/en/derivatives/contracts.aspx}{MOEX},
 \href{https://www.iqfeed.net/symbolguide/index.cfm?symbolguide=lookup}{IQFeed},
 \href{https://finance.yahoo.com/}{Yahoo} and
 \href{https://www.google.com/finance}{Google} sources. \cr
@@ -44,7 +60,8 @@ It is recommended to store tick market data locally.
 Load time is reduced dramatically. It is a good way to collect market data as
 e.g. IQFeed gives only 180 days of tick data if you would need more it will
 cost you a lot. See \code{\link{store_market_data}} for details. \cr
-See \link{iqfeed} return format specification.
+See \link{iqfeed} return format specification. \cr
+MOEX data can be retrieved from local storage only in order to minimize load on MOEX data servers. Read \code{\link{store_market_data}} for information on how to store data locally. \cr
 }
 \examples{
 \donttest{
@@ -58,6 +75,10 @@ get_iqfeed_data( 'MSFT', Sys.Date() - 3, Sys.Date() , 'tick' )
 
 get_google_data( 'MSFT', '2015-01-01', '2016-01-01' )
 get_yahoo_data( 'MSFT', '2015-01-01', '2016-01-01' )
+
+get_moex_futures_data( 'RIH9', '2009-01-01', '2009-02-01', 'tick', local = T )
+get_moex_options_data( 'RI55000C9', '2009-01-01', '2009-02-01', 'tick', local = T )
+get_moex_continuous_futures_data( 'RI', '2016-01-01', '2016-11-01', frequency = 3, day_exp = 15 )
 
 }
 }

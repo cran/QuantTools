@@ -27,7 +27,9 @@ enum class TradeSide: int { LONG, SHORT };
 enum class TradeState: int { NEW, OPENED, CLOSED };
 
 class Trade {
-friend class Processor;
+
+  friend class Statistics;
+  friend class Processor;
 
     TradeState state;
     int    idTrade    = NA_INTEGER - 1;
@@ -48,6 +50,12 @@ friend class Processor;
     double mtmMinRel  = 0;
     double mtmMaxRel  = 0;
     double costRel    = 0;
+
+    bool IsOpened() { return state == TradeState::OPENED; }
+    bool IsClosed() { return state == TradeState::CLOSED; }
+    bool IsNew()    { return state == TradeState::NEW;    }
+    bool IsLong()   { return side  == TradeSide::LONG;    }
+    bool IsShort()  { return side  == TradeSide::SHORT;   }
 
 };
 

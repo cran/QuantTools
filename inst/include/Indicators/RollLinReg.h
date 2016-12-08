@@ -158,10 +158,10 @@ public:
     return history;
   }
 
-  std::vector< double > GetAlphaHistry() { return alphaHistory; }
-  std::vector< double > GetBetaHistry() { return betaHistory; }
-  std::vector< double > GetRHistry() { return rHistory; }
-  std::vector< double > GetRSquaredHistry() { return rSquaredHistory; }
+  std::vector< double > GetAlphaHistory() { return alphaHistory; }
+  std::vector< double > GetBetaHistory() { return betaHistory; }
+  std::vector< double > GetRHistory() { return rHistory; }
+  std::vector< double > GetRSquaredHistory() { return rSquaredHistory; }
 
 };
 

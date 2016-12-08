@@ -27,17 +27,17 @@
 #'
 #' @name round_POSIXct
 #' @export
-round_POSIXct = function( x, n = 1, units = c( 'secs','mins', 'hours' ), method = round ) {
+round_POSIXct = function( x, n = 1, units = c( 'secs','mins', 'hours', 'days' ), method = round ) {
 
   units <- match.arg( units )
-  r = n * switch( units, 'secs'  = 1, 'mins'  = 60, 'hours'  = 60 * 60 )
+  r = n * switch( units, 'secs'  = 1, 'mins'  = 60, 'hours'  = 60 * 60, 'days' = 60 * 60 * 24 )
   as.POSIXct( method( as.numeric( x ) / r ) * r, tz = attr( x, 'tzone' ), origin = '1970-01-01' )
 
 }
 #' @rdname round_POSIXct
 #' @export
-ceiling_POSIXct = function( x, n = 1, units = c( 'secs','mins', 'hours' ) ) round_POSIXct( x, n, units, method = ceiling )
+ceiling_POSIXct = function( x, n = 1, units = c( 'secs','mins', 'hours', 'days' ) ) round_POSIXct( x, n, units, method = ceiling )
 #' @rdname round_POSIXct
 #' @export
-trunc_POSIXct = function( x, n = 1, units = c( 'secs','mins', 'hours' ) ) round_POSIXct( x, n, units, method = trunc )
+trunc_POSIXct = function( x, n = 1, units = c( 'secs','mins', 'hours', 'days' ) ) round_POSIXct( x, n, units, method = trunc )
 

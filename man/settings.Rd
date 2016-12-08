@@ -22,10 +22,13 @@ Controls package settings.
 
 List of available settings:
 \tabular{lll}{
-finam_storage      \tab Finam  local storage path       \cr
+finam_storage      \tab Finam local storage path        \cr
 iqfeed_storage     \tab IQFeed local storage path       \cr
+moex_storage       \tab MOEX local storage path         \cr
+moex_data_url      \tab MOEX data url                   \cr
 finam_storage_from \tab Finam storage first date        \cr
 iqfeed_storage_from\tab IQFeed storage first date       \cr
+moex_storage_from  \tab MOEX storage first date         \cr
 finam_symbols      \tab Finam  symbols to store         \cr
 iqfeed_symbols     \tab IQFeed symbols to store         \cr
 iqfeed_port        \tab IQFeed historical port number   \cr
@@ -33,6 +36,7 @@ iqfeed_host        \tab IQFeed host                     \cr
 iqfeed_timeout     \tab IQFeed connection timeout       \cr
 iqfeed_buffer      \tab IQFeed number of bytes buffer   \cr
 iqfeed_verbose     \tab IQFeed verbose internals?       \cr
+temp_directory     \tab temporary directory location    \cr
 }
 }
 \examples{

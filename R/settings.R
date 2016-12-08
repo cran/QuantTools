@@ -51,10 +51,13 @@
 #'
 #' List of available settings:
 #' \tabular{lll}{
-#' finam_storage      \tab Finam  local storage path       \cr
+#' finam_storage      \tab Finam local storage path        \cr
 #' iqfeed_storage     \tab IQFeed local storage path       \cr
+#' moex_storage       \tab MOEX local storage path         \cr
+#' moex_data_url      \tab MOEX data url                   \cr
 #' finam_storage_from \tab Finam storage first date        \cr
 #' iqfeed_storage_from\tab IQFeed storage first date       \cr
+#' moex_storage_from  \tab MOEX storage first date         \cr
 #' finam_symbols      \tab Finam  symbols to store         \cr
 #' iqfeed_symbols     \tab IQFeed symbols to store         \cr
 #' iqfeed_port        \tab IQFeed historical port number   \cr
@@ -62,6 +65,7 @@
 #' iqfeed_timeout     \tab IQFeed connection timeout       \cr
 #' iqfeed_buffer      \tab IQFeed number of bytes buffer   \cr
 #' iqfeed_verbose     \tab IQFeed verbose internals?       \cr
+#' temp_directory     \tab temporary directory location    \cr
 #'}
 #' @rdname settings
 #' @export
@@ -93,9 +97,14 @@ QuantTools_settings_defaults = function() {
 
   .settings$finam_storage = paste( path.expand('~') , 'Market Data', 'finam', sep = '/' )
   .settings$iqfeed_storage = paste( path.expand('~') , 'Market Data', 'iqfeed', sep = '/' )
+  .settings$moex_storage = paste( path.expand('~') , 'Market Data', 'moex', sep = '/' )
+  .settings$temp_directory = paste( path.expand('~') , 'Market Data', 'temp', sep = '/' )
+
+  .settings$moex_data_url = ''
 
   .settings$finam_storage_from = '2016-01-01'
   .settings$iqfeed_storage_from = '2016-01-01'
+  .settings$moex_storage_from = '2003-01-01'
 
 
   .settings$iqfeed_port = 9100

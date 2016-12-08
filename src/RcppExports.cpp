@@ -155,6 +155,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// roll_sd
+std::vector<double> roll_sd(Rcpp::NumericVector x, std::size_t n);
+RcppExport SEXP QuantTools_roll_sd(SEXP xSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< std::size_t >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_sd(x, n));
+    return rcpp_result_gen;
+END_RCPP
+}
 // roll_sd_filter
 std::vector< bool > roll_sd_filter(Rcpp::NumericVector x, int n, double k, int m);
 RcppExport SEXP QuantTools_roll_sd_filter(SEXP xSEXP, SEXP nSEXP, SEXP kSEXP, SEXP mSEXP) {
@@ -166,18 +178,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type k(kSEXP);
     Rcpp::traits::input_parameter< int >::type m(mSEXP);
     rcpp_result_gen = Rcpp::wrap(roll_sd_filter(x, n, k, m));
-    return rcpp_result_gen;
-END_RCPP
-}
-// roll_sd
-std::vector<double> roll_sd(Rcpp::NumericVector x, std::size_t n);
-RcppExport SEXP QuantTools_roll_sd(SEXP xSEXP, SEXP nSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< std::size_t >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(roll_sd(x, n));
     return rcpp_result_gen;
 END_RCPP
 }

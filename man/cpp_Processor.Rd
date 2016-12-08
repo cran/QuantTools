@@ -18,22 +18,25 @@ c++ class documentation
 \section{Public Members and Methods}{
 
 \tabular{lll}{
-\cr \strong{Name}                           \tab \strong{Return Type} \tab \strong{Description}
-\cr \code{onCandle( \link{Candle} candle )} \tab \code{std::function} \tab called on new candle event
-\cr \code{onTick( \link{Tick} tick )}       \tab \code{std::function} \tab called on new tick event
-\cr \code{Feed( \link{Tick} tick )}         \tab \code{void}          \tab process by individual tick
-\cr \code{Feed( Rcpp::DataFrame ticks )}    \tab \code{void}          \tab batch process, see 'Ticks' section
-\cr \code{SendOrder( \link{Order}* order )} \tab \code{void}          \tab send order to exchange
-\cr \code{CancelOrders()}                   \tab \code{void}          \tab cancel active orders
-\cr \code{GetPosition()}                    \tab \code{int}           \tab total executed position, positive means long, negative means short
-\cr \code{GetPositionPlanned()}             \tab \code{int}           \tab total number of orders processing ( not executed or cancelled yet )
-\cr \code{GetMarketValue()}                 \tab \code{double}        \tab total portfolio percent value ( initial value is 100 )
-\cr \code{GetCandles()}                     \tab \code{Rcpp::List}    \tab candles history, see 'Candles' section
-\cr \code{GetOrders()}                      \tab \code{Rcpp::List}    \tab orders history, see 'Orders' section
-\cr \code{GetTrades()}                      \tab \code{Rcpp::List}    \tab trades history, see 'Trades' section
-\cr \code{GetSummary()}                     \tab \code{Rcpp::List}    \tab trades summary, see 'Summary' section
-\cr \code{Reset()}                          \tab \code{void}          \tab resets to initial state
-\cr \code{SetCost( \link{Cost} cost )}      \tab \code{void}          \tab sets trading commissions cost
+\cr \strong{Name}                           \tab \strong{Return Type}       \tab \strong{Description}
+\cr \code{onCandle( \link{Candle} candle )} \tab \code{std::function}       \tab called on new candle event
+\cr \code{onTick( \link{Tick} tick )}       \tab \code{std::function}       \tab called on new tick event
+\cr \code{Feed( \link{Tick} tick )}         \tab \code{void}                \tab process by individual tick
+\cr \code{Feed( Rcpp::DataFrame ticks )}    \tab \code{void}                \tab batch process, see 'Ticks' section
+\cr \code{SendOrder( \link{Order}* order )} \tab \code{void}                \tab send order to exchange
+\cr \code{CancelOrders()}                   \tab \code{void}                \tab cancel active orders
+\cr \code{GetPosition()}                    \tab \code{int}                 \tab total executed position, positive means long, negative means short
+\cr \code{GetPositionPlanned()}             \tab \code{int}                 \tab total number of orders processing ( not executed or cancelled yet )
+\cr \code{GetMarketValue()}                 \tab \code{double}              \tab total portfolio percent value ( initial value is 0 )
+\cr \code{GetCandles()}                     \tab \code{Rcpp::List}          \tab candles history, see 'Candles' section
+\cr \code{GetOrders()}                      \tab \code{Rcpp::List}          \tab orders history, see 'Orders' section
+\cr \code{GetTrades()}                      \tab \code{Rcpp::List}          \tab trades history, see 'Trades' section
+\cr \code{GetSummary()}                     \tab \code{Rcpp::List}          \tab trades summary, see 'Summary' section
+\cr \code{GetOnCandleMarketValueHistory()}  \tab \code{std::vector<double>} \tab vector of portfolio value history recalculated on candle complete
+\cr \code{GetOnCandleDrawDownHistory()}     \tab \code{std::vector<double>} \tab vector of portfolio drawdown history recalculated on candle complete
+\cr \code{GetOnDayClosePerformanceHistory()}\tab \code{Rcpp::List}          \tab data.table of daily performance history with columns \code{date, return, pnl, drawdown}
+\cr \code{Reset()}                          \tab \code{void}                \tab resets to initial state
+\cr \code{SetCost( \link{Cost} cost )}      \tab \code{void}                \tab sets trading commissions cost
 }
 }
 
@@ -142,8 +145,8 @@ Back test summary statistics:
 \cr pct_win       \tab percent of winning trades
 \cr pct_loss      \tab percent of loosing trades
 \cr avg_win       \tab average winning trade in basis points
-\cr avg_loss      \tab average loosing in basis points
-\cr avg_pnl       \tab average pnl in basis points
+\cr avg_loss      \tab average loosing trade in basis points
+\cr avg_pnl       \tab average trade pnl in basis points
 \cr win           \tab total won in percent
 \cr loss          \tab total lost in percent
 \cr pnl           \tab total pnl in percent
@@ -151,6 +154,10 @@ Back test summary statistics:
 \cr max_dd_start  \tab time the maximum drawdown started
 \cr max_dd_end    \tab time the maximum drawdown recovered
 \cr max_dd_length \tab number of calendar days in the maximum drawdown period
+\cr sharpe        \tab annualized Sharpe ratio calulated on daily returns
+\cr sortino       \tab annualized Sortino ratio calulated on daily returns
+\cr r_squared     \tab R Squared calulated on daily PnL values
+\cr avg_dd        \tab average drawdown calulated on daily drawdown history
 }
 }
 \seealso{

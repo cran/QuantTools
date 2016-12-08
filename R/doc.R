@@ -18,7 +18,7 @@
 #' @importFrom grDevices colorRampPalette rainbow rgb
 #' @importFrom graphics abline axTicks axis grconvertX grconvertY grid image legend lines mtext par plot rect segments strheight strwidth text title
 #' @importFrom stats time
-#' @importFrom utils read.delim tail
+#' @importFrom utils read.delim tail capture.output download.file unzip
 #' @importFrom Rcpp evalCpp
 #' @import data.table
 #' @useDynLib QuantTools

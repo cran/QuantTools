@@ -23,10 +23,10 @@ R functions \link{roll_lm}.
 \cr \code{Add( InputType value )} \tab \code{void}                 \tab update indicator
 \cr \code{Reset()}                \tab \code{void}                 \tab reset to initial state
 \cr \code{IsFormed()}             \tab \code{bool}                 \tab is indicator value valid?
-\cr \code{GetAlphaHistry()}       \tab \code{std::vector< double >}\tab return alpha history
-\cr \code{GetBetaHistry()}        \tab \code{std::vector< double >}\tab return beta history
-\cr \code{GetRHistry()}           \tab \code{std::vector< double >}\tab return r history
-\cr \code{GetRSquaredHistry()}    \tab \code{std::vector< double >}\tab return r squared history
+\cr \code{GetAlphaHistory()}       \tab \code{std::vector< double >}\tab return alpha history
+\cr \code{GetBetaHistory()}        \tab \code{std::vector< double >}\tab return beta history
+\cr \code{GetRHistory()}           \tab \code{std::vector< double >}\tab return r history
+\cr \code{GetRSquaredHistory()}    \tab \code{std::vector< double >}\tab return r squared history
 \cr \code{GetValue()}             \tab \code{LinRegCoeffs}         \tab has members \code{double alpha, beta, r, rSquared}
 \cr \code{GetHistory()}           \tab \code{DataFrame}            \tab return values history data.table with columns \code{alpha, beta, r, r.squared}
 }
