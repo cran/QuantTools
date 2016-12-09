@@ -105,7 +105,7 @@ public:
 
       coeffs.beta     = covXY / varY;
       coeffs.alpha    = ( sumX - coeffs.beta  * sumY ) / n;
-      coeffs.r        = covXY / sqrt( varX * varY );
+      coeffs.r        = covXY / std::sqrt( varX * varY );
       coeffs.rSquared = coeffs.r * coeffs.r;
 
     }

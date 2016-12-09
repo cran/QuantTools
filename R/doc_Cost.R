@@ -21,7 +21,7 @@
 #' @param pointValue price point value ( 1 for stocks )
 #' @param cancel absolute commission per order cancel
 #' @param order absolute commission per order
-#' @param stock absolute commission per stock / contract
+#' @param stockAbs absolute commission per stock / contract
 #' @param tradeAbs absolute commission per trade
 #' @param tradeRel relative commission per trade volume
 #' @param longAbs absolute commission/refund per long position

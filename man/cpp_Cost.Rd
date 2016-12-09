@@ -10,7 +10,7 @@
 
 \item{order}{absolute commission per order}
 
-\item{stock}{absolute commission per stock / contract}
+\item{stockAbs}{absolute commission per stock / contract}
 
 \item{tradeAbs}{absolute commission per trade}
 

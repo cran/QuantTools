@@ -104,6 +104,33 @@ public:
   ~Processor() { Reset(); }
 
   void SetCost( Cost cost ) { this->cost = cost; }
+  void SetCost( Rcpp::List cost ) {
+
+    Rcpp::StringVector names = cost.attr( "names" );
+
+    bool hasPointValue = std::find( names.begin(), names.end(), "pointValue" ) != names.end();
+    bool hasCancel	   = std::find( names.begin(), names.end(), "cancel"     ) != names.end();
+    bool hasOrder	     = std::find( names.begin(), names.end(), "order"      ) != names.end();
+    bool hasStockAbs   = std::find( names.begin(), names.end(), "stockAbs"   ) != names.end();
+    bool hasTradeAbs	 = std::find( names.begin(), names.end(), "tradeAbs"   ) != names.end();
+    bool hasTradeRel	 = std::find( names.begin(), names.end(), "tradeRel"   ) != names.end();
+    bool hasLongAbs	   = std::find( names.begin(), names.end(), "longAbs"    ) != names.end();
+    bool hasLongRel	   = std::find( names.begin(), names.end(), "longRel"    ) != names.end();
+    bool hasShortAbs	 = std::find( names.begin(), names.end(), "shortAbs"   ) != names.end();
+    bool hasShortRel   = std::find( names.begin(), names.end(), "shortRel"   ) != names.end();
+
+    if( hasPointValue ) this->cost.pointValue = cost["pointValue"];
+    if( hasCancel     ) this->cost.cancel     = cost["cancel"    ];
+    if( hasOrder      ) this->cost.order      = cost["order"     ];
+    if( hasStockAbs   ) this->cost.stockAbs   = cost["stockAbs"  ];
+    if( hasTradeAbs   ) this->cost.tradeAbs   = cost["tradeAbs"  ];
+    if( hasTradeRel   ) this->cost.tradeRel   = cost["tradeRel"  ];
+    if( hasLongAbs    ) this->cost.longAbs    = cost["longAbs"   ];
+    if( hasLongRel    ) this->cost.longRel    = cost["longRel"   ];
+    if( hasShortAbs   ) this->cost.shortAbs   = cost["shortAbs"  ];
+    if( hasShortRel   ) this->cost.shortRel   = cost["shortRel"  ];
+
+  }
 
   void Feed( const Tick& tick ) {
 

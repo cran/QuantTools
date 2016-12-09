@@ -272,19 +272,19 @@ public:
     double varN  = nDaysTested * nDaysTested * ( nDaysTested * nDaysTested - 1 ) / 12; // * 1.0 / ( n * ( n - 1 ) )
     double varV  = nDaysTested * sumVV - sumV * sumV;                                  // * 1.0 / ( n * ( n - 1 ) )
 
-    double r = /*varV == 0 or varN == 0 ? NAN : */covNV / sqrt( varN * varV );
+    double r = /*varV == 0 or varN == 0 ? NAN : */covNV / std::sqrt( varN * varV );
 
     rSquared = r * r;
 
     double avgR = sumR / nDaysTested;
     double varR = /*nDaysTested < 2 ? NAN : */( nDaysTested * sumRR - sumR * sumR ) / nDaysTested / ( nDaysTested - 1 );
 
-    sharpe = /*varR == 0 ? NAN : */avgR / sqrt( varR ) * sqrt( nTradingDaysInYear );
+    sharpe = /*varR == 0 ? NAN : */avgR / std::sqrt( varR ) * std::sqrt( nTradingDaysInYear );
 
     double downside = marketValueChange > 0 ? 0 : marketValueChange;
     tdv = ( tdv * ( nDaysTested - 1 ) + downside * downside ) / nDaysTested;
 
-    sortino = /*tdv == 0 ? NAN : */avgR / sqrt( tdv ) * sqrt( nTradingDaysInYear );
+    sortino = /*tdv == 0 ? NAN : */avgR / std::sqrt( tdv ) * std::sqrt( nTradingDaysInYear );
 
     avgDrawDown = ( avgDrawDown * ( nDaysTested - 1 ) + drawDown ) / nDaysTested;
 

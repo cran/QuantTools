@@ -66,7 +66,7 @@ public:
       sumXX -= old * old;
 
     }
-    sd = sqrt( sumXX / n - ( sumX / n ) * ( sumX / n ) ) * std::sqrt( n * 1. / ( n - 1 ) );
+    sd = std::sqrt( sumXX / n - ( sumX / n ) * ( sumX / n ) ) * std::sqrt( n * 1. / ( n - 1 ) );
 
     IsFormed() ? history.push_back( GetValue() ) : history.push_back( NA_REAL );
 

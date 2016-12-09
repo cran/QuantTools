@@ -1,4 +1,4 @@
-#### v0.5.2:
+#### v0.5.3:
 - `round_POSIXct` `days` units support added.
 - IQFeed local storage `1min` to `day` period support added.
 - `Processor` mark to market caclulation fixed. Draw down calculation changed to difference between maximum market value and current market value.

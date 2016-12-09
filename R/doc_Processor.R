@@ -31,6 +31,8 @@
 #' \cr \code{Feed( \link{Tick} tick )}         \tab \code{void}                \tab process by individual tick
 #' \cr \code{Feed( Rcpp::DataFrame ticks )}    \tab \code{void}                \tab batch process, see 'Ticks' section
 #' \cr \code{SendOrder( \link{Order}* order )} \tab \code{void}                \tab send order to exchange
+#' \cr \code{SetCost( \link{Cost} cost )}      \tab \code{void}                \tab set trading costs
+#' \cr \code{SetCost( Rcpp::List cost )}       \tab \code{void}                \tab same as above but with R list with columns as in \link{Cost}
 #' \cr \code{CancelOrders()}                   \tab \code{void}                \tab cancel active orders
 #' \cr \code{GetPosition()}                    \tab \code{int}                 \tab total executed position, positive means long, negative means short
 #' \cr \code{GetPositionPlanned()}             \tab \code{int}                 \tab total number of orders processing ( not executed or cancelled yet )
