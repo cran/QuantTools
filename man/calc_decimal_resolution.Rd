@@ -15,4 +15,3 @@ Calculate decimal resolution
 \details{
 Used in \code{\link{add_last_values}} internally.
 }
-

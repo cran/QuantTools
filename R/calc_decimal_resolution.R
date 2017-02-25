@@ -18,10 +18,7 @@
 #' Calculate decimal resolution
 #'
 #' @param x numeric vector
-#'
-#' @details
-#' Used in \code{\link{add_last_values}} internally.
-#'
+#' @details Used in \code{\link{add_last_values}} internally.
 #' @export
 calc_decimal_resolution <- function(x){
 

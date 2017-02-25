@@ -27,4 +27,3 @@ Other technical indicators: \code{\link{crossover}},
   \code{\link{roll_volume_profile}}, \code{\link{rsi}},
   \code{\link{sma}}, \code{\link{stochastic}}
 }
-

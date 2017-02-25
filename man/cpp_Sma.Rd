@@ -2,12 +2,12 @@
 % Please edit documentation in R/doc_Sma.R
 \name{Sma}
 \alias{Sma}
-\title{c++ Simple Moving Average class}
+\title{C++ Simple Moving Average class}
 \arguments{
 \item{n}{indicator period}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \details{
 R function \link{sma}.
@@ -27,8 +27,16 @@ R function \link{sma}.
 \cr \code{GetHistory()}         \tab \code{std::vector<double>} \tab return values history
 }
 }
+
 \seealso{
-Other c++ classes: \code{\link{BBands}},
+Other C++ indicators: \code{\link{BBands}},
+  \code{\link{Crossover}}, \code{\link{Ema}},
+  \code{\link{Indicator}}, \code{\link{RollLinReg}},
+  \code{\link{RollPercentRank}}, \code{\link{RollRange}},
+  \code{\link{RollSd}}, \code{\link{RollVolumeProfile}},
+  \code{\link{Rsi}}, \code{\link{Stochastic}}
+
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Crossover}}, \code{\link{Ema}},
   \code{\link{Indicator}}, \code{\link{Order}},
@@ -37,12 +45,4 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{RollSd}}, \code{\link{RollVolumeProfile}},
   \code{\link{Rsi}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
-
-Other c++ indicators: \code{\link{BBands}},
-  \code{\link{Crossover}}, \code{\link{Ema}},
-  \code{\link{Indicator}}, \code{\link{RollLinReg}},
-  \code{\link{RollPercentRank}}, \code{\link{RollRange}},
-  \code{\link{RollSd}}, \code{\link{RollVolumeProfile}},
-  \code{\link{Rsi}}, \code{\link{Stochastic}}
 }
-

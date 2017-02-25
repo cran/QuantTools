@@ -31,4 +31,3 @@ Other technical indicators: \code{\link{bbands}},
   \code{\link{rsi}}, \code{\link{sma}},
   \code{\link{stochastic}}
 }
-

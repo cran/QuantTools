@@ -16,6 +16,5 @@ data.table with columns \code{time, open, high, low, close, volume, id}. Where \
 Note: last candle is always omitted.
 }
 \description{
-Convert ticks to candles.
+Convert ticks to candles
 }
-

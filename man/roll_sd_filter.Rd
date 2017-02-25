@@ -18,4 +18,3 @@ roll_sd_filter(x, n, k = 1, m = 10L)
 \description{
 Logical vector is returned. This function is useful to filter ticks. Finds consequent elements which absolute change is higher than k standard deviation of past n changes and mark them \code{FALSE}. If sequence length greater than \code{m} values become \code{TRUE}.
 }
-

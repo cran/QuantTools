@@ -15,17 +15,129 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' Plot data.frame as table with histogram in background
+#' Plot data.table as table
 #'
-#' @param x data
-#' @param hist histogram background type, \code{'bycol', 'total', 'n'}
-#' @param col only auto colors available
-#' @param srt column names rotation
+#' @param dt data.table
+#' @param transpose should table be transposed?
+#' @param justify \code{'middle','left','right'}
 #' @param ... further graphical parameters as in \code{\link[graphics]{par}}
 #' @family graphical functions
-#'
 #' @export
-plot_table = function( x, hist = 'n', col = 'auto', srt = 0, ... ){
+plot_table = function( dt, transpose = F, justify = c( 'middle', 'left', 'right' ), ... ) {
+
+  justify = match.arg( justify )
+  names = names( dt )
+  plot( 0, type = 'n', xlim = 0:1, ylim = -1:0, xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', bty = 'n', xaxs = 'i', yaxs = 'i', ... )
+  bord = strwidth( '_' )
+  if( !transpose ) {
+
+    data_width = sapply( dt, function( x ) max( strwidth( x ) ) ) + bord
+    name_width = strwidth( names ) + bord
+    width  = pmax( data_width, name_width )
+    height = rep( strheight( 'X' ),  nrow( dt ) + 1 )
+
+    # normalize width
+    norm_width  = width / sum( width )
+    norm_height = pmin( height / sum( height ), height + bord * 2 )
+
+    col_borders = c( 0, cumsum( norm_width ) )
+    row_borders = c( 0, cumsum( -norm_height ) )
+
+    x_middle = col_borders[ -length( col_borders ) ] + diff( col_borders ) / 2
+    y_middle = row_borders[ -length( row_borders ) ] + diff( row_borders ) / 2
+    x_left = col_borders[ -length( col_borders ) ] + bord
+    x_right = col_borders[ -1 ] - bord
+
+    segments( col_borders[1], row_borders, col_borders[ length( col_borders ) ],row_borders )
+    segments( col_borders, row_borders[1], col_borders,row_borders[ length( row_borders ) ] )
+
+    switch( justify,
+
+            middle = {
+              #data
+              lapply( seq_along( dt ), function( i ) text( x_middle[i], y_middle[-1], labels = dt[[i]] ) )
+              #names
+              text( x_middle, y_middle[1], labels = names, font = 2 )
+            },
+            left = {
+              # data
+              lapply( seq_along( dt ), function( i ) text( x_left[i], y_middle[-1], labels = dt[[i]], pos = 4, offset = 0 ) )
+              # names
+              text( x_left, y_middle[1], labels = names, font = 2, pos = 4, offset = 0 )
+            },
+            right = {
+              # data
+              lapply( seq_along( dt ), function( i ) text( x_right[i], y_middle[-1], labels = dt[[i]], pos = 2, offset = 0 ) )
+              # names
+              text( x_right, y_middle[1], labels = names, font = 2, pos = 2, offset = 0 )
+            }
+    )
+
+  } else {
+
+    data_width = apply( dt, 1, function( x ) max( strwidth( x ) ) ) + bord
+    name_width = max( strwidth( names ) ) + bord
+    width  = c( name_width, data_width )
+    height = rep( strheight( 'X'), ncol( dt ) )
+
+    # normalize width
+    norm_width  = width / sum( width )
+    norm_height = pmin( height / sum( height ), height + bord * 2 )
+
+    col_borders = c( 0, cumsum( norm_width ) )
+    row_borders = c( 0, cumsum( -norm_height ) )
+
+    x_middle = col_borders[ -length( col_borders ) ] + diff( col_borders ) / 2
+    y_middle = row_borders[ -length( row_borders ) ] + diff( row_borders ) / 2
+    x_left = col_borders[ -length( col_borders ) ] + bord
+    x_right = col_borders[ -1 ] - bord
+
+    segments( col_borders[1], row_borders, col_borders[ length( col_borders ) ],row_borders )
+    segments( col_borders, row_borders[1], col_borders,row_borders[ length( row_borders ) ] )
+
+    switch( justify,
+
+            middle = {
+              # data
+              lapply( seq_along( dt[[1]] ), function( i ) text( x_middle[-1][i], y_middle, labels = format( dt[i] ) ) )
+              # names
+              text( x_middle[1], y_middle, labels = names, font = 2 )
+            },
+            left = {
+              # data
+              lapply( seq_along( dt[[1]] ), function( i ) text( x_left[-1][i], y_middle, labels = format( dt[i] ), pos = 4, offset = 0 ) )
+              # names
+              text( x_left[1], y_middle, labels = names, font = 2, pos = 4, offset = 0 )
+            },
+            right = {
+              # data
+              lapply( seq_along( dt[[1]] ), function( i ) text( x_right[-1][i], y_middle, labels = format( dt[i] ), pos = 2, offset = 0 ) )
+              # names
+              text( x_right[1], y_middle, labels = names, font = 2, pos = 2, offset = 0 )
+            }
+    )
+
+  }
+
+
+
+
+
+}
+
+
+
+# Plot data.frame as table with histogram in background
+#
+# @param x data
+# @param hist histogram background type, \code{'bycol', 'total', 'n'}
+# @param col only auto colors available
+# @param srt column names rotation
+# @param ... further graphical parameters as in \code{\link[graphics]{par}}
+# @family graphical functions
+#
+# @export
+plot_table_old = function( x, hist = 'n', col = 'auto', srt = 0, ... ){
 
   xlim = 0:1
   ylim = 0:1

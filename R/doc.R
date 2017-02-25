@@ -21,5 +21,5 @@
 #' @importFrom utils read.delim tail capture.output download.file unzip
 #' @importFrom Rcpp evalCpp
 #' @import data.table
-#' @useDynLib QuantTools
+#' @useDynLib QuantTools, .registration = TRUE
 NULL

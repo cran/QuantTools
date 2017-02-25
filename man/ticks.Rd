@@ -5,7 +5,6 @@
 \alias{ticks}
 \title{Example intraday tick data}
 \description{
-Example intraday tick data.
+Example intraday tick data
 }
 \keyword{data}
-

@@ -20,7 +20,6 @@
 #' @param obj data.table
 #' @param action function or text string with actions to perform
 #' @param ... additional parameters to function if \code{action} is function
-#'
 #' @name dof
 #' @export
 dof <- function( obj, action, ... ){

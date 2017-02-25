@@ -12,4 +12,3 @@ lapply_named(X, FUN, ...)
 \description{
 lapply which returns named list
 }
-

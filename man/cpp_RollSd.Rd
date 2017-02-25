@@ -2,12 +2,12 @@
 % Please edit documentation in R/doc_RollSd.R
 \name{RollSd}
 \alias{RollSd}
-\title{c++ Rolling Standard Deviation class}
+\title{C++ Rolling Standard Deviation class}
 \arguments{
 \item{n}{indicator period}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \section{Usage}{
  \code{RollSd( int n )}
@@ -23,8 +23,16 @@ c++ class documentation
 \cr \code{GetHistory()}           \tab \code{std::vector<double>}  \tab factor vector with levels \code{UP, DN}
 }
 }
+
 \seealso{
-Other c++ classes: \code{\link{BBands}},
+Other C++ indicators: \code{\link{BBands}},
+  \code{\link{Crossover}}, \code{\link{Ema}},
+  \code{\link{Indicator}}, \code{\link{RollLinReg}},
+  \code{\link{RollPercentRank}}, \code{\link{RollRange}},
+  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
+  \code{\link{Sma}}, \code{\link{Stochastic}}
+
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Crossover}}, \code{\link{Ema}},
   \code{\link{Indicator}}, \code{\link{Order}},
@@ -33,12 +41,4 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
-
-Other c++ indicators: \code{\link{BBands}},
-  \code{\link{Crossover}}, \code{\link{Ema}},
-  \code{\link{Indicator}}, \code{\link{RollLinReg}},
-  \code{\link{RollPercentRank}}, \code{\link{RollRange}},
-  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
-  \code{\link{Sma}}, \code{\link{Stochastic}}
 }
-

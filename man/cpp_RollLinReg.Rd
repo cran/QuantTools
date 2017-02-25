@@ -2,12 +2,12 @@
 % Please edit documentation in R/doc_RollLinReg.R
 \name{RollLinReg}
 \alias{RollLinReg}
-\title{c++ Rolling Linear Regression class}
+\title{C++ Rolling Linear Regression class}
 \arguments{
 \item{n}{indicator period}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \details{
 R functions \link{roll_lm}.
@@ -28,11 +28,19 @@ R functions \link{roll_lm}.
 \cr \code{GetRHistory()}           \tab \code{std::vector< double >}\tab return r history
 \cr \code{GetRSquaredHistory()}    \tab \code{std::vector< double >}\tab return r squared history
 \cr \code{GetValue()}             \tab \code{LinRegCoeffs}         \tab has members \code{double alpha, beta, r, rSquared}
-\cr \code{GetHistory()}           \tab \code{DataFrame}            \tab return values history data.table with columns \code{alpha, beta, r, r.squared}
+\cr \code{GetHistory()}           \tab \code{List}                 \tab return values history data.table with columns \code{alpha, beta, r, r.squared}
 }
 }
+
 \seealso{
-Other c++ classes: \code{\link{BBands}},
+Other C++ indicators: \code{\link{BBands}},
+  \code{\link{Crossover}}, \code{\link{Ema}},
+  \code{\link{Indicator}}, \code{\link{RollPercentRank}},
+  \code{\link{RollRange}}, \code{\link{RollSd}},
+  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
+  \code{\link{Sma}}, \code{\link{Stochastic}}
+
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Crossover}}, \code{\link{Ema}},
   \code{\link{Indicator}}, \code{\link{Order}},
@@ -41,12 +49,4 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
-
-Other c++ indicators: \code{\link{BBands}},
-  \code{\link{Crossover}}, \code{\link{Ema}},
-  \code{\link{Indicator}}, \code{\link{RollPercentRank}},
-  \code{\link{RollRange}}, \code{\link{RollSd}},
-  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
-  \code{\link{Sma}}, \code{\link{Stochastic}}
 }
-

@@ -15,10 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' Distinct colors vector
+#' Convert time zone to 'UTC' without changing value
 #'
-#' @family graphical functions
-#' @details Distinct colors vector.
-#' @name distinct_colors
+#' @param x \code{POSIXct} vector
+#'
+#' @examples
+#' \donttest{
+#'
+#' Sys.time()
+#' to_UTC( Sys.time() )
+#'
+#' }
+#'
 #' @export
-distinct_colors = c( '#aed667','#a1b3ff','#cdcb57','#01c8fa','#f18d4f','#01efc2','#ff8d69','#19b783','#f08085','#7eea9b','#debeff','#ebbd53','#b1cdff','#eba149','#9be0de','#ff9ca1','#79af61','#deb8e4','#b4a141','#72ae8e','#db8f6b','#c5dd9e','#c49788','#e4d49e','#e3d2bc' )
+to_UTC = function( x ) {
+
+  tz = attr( x, 'tzone' )
+  if( is.null( tz ) ) tz = ''
+  if( tz == 'UTC' ) return( x )
+
+  x = data.table( x )[, x + ( as.POSIXct( format( x[1] ), tz = 'UTC' ) - as.POSIXct( format( x[1] ), tz = tz ) ),
+                      by = as.Date( x ) ]$'V1'
+  attr( x, 'tzone' ) = 'UTC'
+  return( x )
+
+}

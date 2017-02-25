@@ -2,7 +2,7 @@
 % Please edit documentation in R/doc_Tick.R
 \name{Tick}
 \alias{Tick}
-\title{c++ Tick class}
+\title{C++ Tick class}
 \arguments{
 \item{id}{id}
 
@@ -13,17 +13,18 @@
 \item{volume}{volume}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \section{Usage}{
  \code{Tick{ int id, double time, double price, int volume }}
 }
+
 \seealso{
 Other backtesting classes: \code{\link{Candle}},
   \code{\link{Cost}}, \code{\link{Indicator}},
   \code{\link{Order}}, \code{\link{Processor}}
 
-Other c++ classes: \code{\link{BBands}},
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Crossover}}, \code{\link{Ema}},
   \code{\link{Indicator}}, \code{\link{Order}},
@@ -33,4 +34,3 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{Rsi}}, \code{\link{Sma}},
   \code{\link{Stochastic}}
 }
-

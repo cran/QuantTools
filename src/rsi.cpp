@@ -17,7 +17,8 @@
 
 #include "../inst/include/Indicators/Rsi.h"
 
-//' @title Relative Strength Index
+//' Relative Strength Index
+//'
 //' @param x numeric vectors
 //' @param n window size
 //' @family technical indicators

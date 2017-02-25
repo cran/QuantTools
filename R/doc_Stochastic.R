@@ -15,16 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Stochastic class
-#' @description c++ class documentation
+#' @title C++ Stochastic class
+#' @description C++ class documentation
 #' @section Usage: \code{Stochastic< InputType >( int n, int nFast, int nSlow )}
 #' @param InputType \code{Tick} or \code{ double }
 #' @param n indicator period
 #' @param nFast fast smooth
 #' @param nSlow slow smooth
 #' @details R function \link{stochastic}.
-#' @family c++ indicators
-#' @family c++ classes
+#' @family C++ indicators
+#' @family C++ classes
 #'
 #' @section Public Members and Methods:
 #' \tabular{lll}{
@@ -36,7 +36,7 @@
 #' \cr \code{GetKFastnHistory()}     \tab \code{std::vector< double >}\tab return k fast history
 #' \cr \code{GetDFastHistory()}      \tab \code{std::vector< double >}\tab return d fast history
 #' \cr \code{GetDSlowHistory()}      \tab \code{std::vector< double >}\tab return d slow history
-#' \cr \code{GetHistory()}           \tab \code{DataFrame}            \tab return values history data.table with columns \code{k_fast, d_fast, d_slow}
+#' \cr \code{GetHistory()}           \tab \code{List}                 \tab return values history data.table with columns \code{k_fast, d_fast, d_slow}
 #' }
 #'
 #' @name Stochastic

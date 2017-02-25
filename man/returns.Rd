@@ -19,4 +19,3 @@ Vector of same length as x with absent returns converted to 0 for relative and 1
 \description{
 Calculate returns
 }
-

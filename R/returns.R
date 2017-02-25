@@ -20,9 +20,7 @@
 #' @param x numeric vector
 #' @param type \code{'r' = x[t] / x[t-n] - 1 }, \code{'l' = ln( x[t] / x[t-n] ) }
 #' @param n lookback
-#'
 #' @return Vector of same length as x with absent returns converted to 0 for relative and 1 for logarithmic.
-#'
 #' @export
 returns = function( x, type = 'r', n = 1 ) {
   if( !is.numeric( x ) ) return( x )

@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Trading Commissions class
-#' @description c++ class documentation
+#' @title C++ Trading Commissions class
+#' @description C++ class documentation
 #' @section Usage: \code{Cost = \{\}}
 #' @param pointValue price point value ( 1 for stocks )
 #' @param cancel absolute commission per order cancel
@@ -31,7 +31,7 @@
 #' @name Cost
 #' @rdname cpp_Cost
 #' @family backtesting classes
-#' @family c++ classes
+#' @family C++ classes
 #' @section IMPORTANT:
 #' Positive value means refund, negative value means cost!
 NULL

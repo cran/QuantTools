@@ -21,17 +21,17 @@
 
 //' Generic back test function
 //'
+//' @name back_test
 //' @param enter bool vector of length n of enter signals
 //' @param exit bool vector of length n of exit signals
 //' @param price numeric vector of length n of prices
 //' @param stop_loss relative stop loss, must be negative
 //' @param side direction of enter order, \code{-1}:short, \code{1}:long
+//' @description Back test by enter and exit signals with stop loss on price history. Execution is immediate. Useful for testing on daily data.
 //' @return trades data.table with columns \code{ price_enter,price_exit,mtm_min,mtm_max,id_enter,id_exit,pnl_trade,side}
-//' @details Back test by enter and exit signals with stop loss on price history. Execution is immediate. Useful for testing on daily data.
-//' @name back_test
 //' @export
 // [[Rcpp::export]]
-Rcpp::DataFrame back_test( Rcpp::LogicalVector enter, Rcpp::LogicalVector exit, Rcpp::NumericVector price, double stop_loss = -1000, int side = 1 ) {
+Rcpp::List back_test( Rcpp::LogicalVector enter, Rcpp::LogicalVector exit, Rcpp::NumericVector price, double stop_loss = -1000, int side = 1 ) {
 
   int n = enter.size();
 
@@ -115,7 +115,7 @@ Rcpp::DataFrame back_test( Rcpp::LogicalVector enter, Rcpp::LogicalVector exit, 
   enters = enters[ enters > 0 ];
   exits = exits[ exits > 0 ];
 
-  Rcpp::DataFrame output = ListBuilder()
+  Rcpp::List output = ListBuilder().AsDataTable()
     .Add( "price_enter", enters   )
     .Add( "price_exit" , exits    )
     .Add( "mtm_min"    , mtm_mins )

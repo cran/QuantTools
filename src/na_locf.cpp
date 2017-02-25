@@ -20,9 +20,8 @@
 // [[Rcpp::plugins(cpp11)]]
 
 //' Last Observation Carried Forward
-//' @title Last Observation Carried Forward
-//' @param x numeric vector to roll through
 //'
+//' @param x numeric vector to roll through
 //' @name na_locf
 //' @export
 //[[Rcpp::export]]

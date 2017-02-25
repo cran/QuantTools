@@ -2,7 +2,7 @@
 % Please edit documentation in R/doc_Stochastic.R
 \name{Stochastic}
 \alias{Stochastic}
-\title{c++ Stochastic class}
+\title{C++ Stochastic class}
 \arguments{
 \item{InputType}{\code{Tick} or \code{ double }}
 
@@ -13,7 +13,7 @@
 \item{nSlow}{slow smooth}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \details{
 R function \link{stochastic}.
@@ -33,11 +33,19 @@ R function \link{stochastic}.
 \cr \code{GetKFastnHistory()}     \tab \code{std::vector< double >}\tab return k fast history
 \cr \code{GetDFastHistory()}      \tab \code{std::vector< double >}\tab return d fast history
 \cr \code{GetDSlowHistory()}      \tab \code{std::vector< double >}\tab return d slow history
-\cr \code{GetHistory()}           \tab \code{DataFrame}            \tab return values history data.table with columns \code{k_fast, d_fast, d_slow}
+\cr \code{GetHistory()}           \tab \code{List}                 \tab return values history data.table with columns \code{k_fast, d_fast, d_slow}
 }
 }
+
 \seealso{
-Other c++ classes: \code{\link{BBands}},
+Other C++ indicators: \code{\link{BBands}},
+  \code{\link{Crossover}}, \code{\link{Ema}},
+  \code{\link{Indicator}}, \code{\link{RollLinReg}},
+  \code{\link{RollPercentRank}}, \code{\link{RollRange}},
+  \code{\link{RollSd}}, \code{\link{RollVolumeProfile}},
+  \code{\link{Rsi}}, \code{\link{Sma}}
+
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Crossover}}, \code{\link{Ema}},
   \code{\link{Indicator}}, \code{\link{Order}},
@@ -45,12 +53,4 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{RollPercentRank}}, \code{\link{RollRange}},
   \code{\link{RollSd}}, \code{\link{RollVolumeProfile}},
   \code{\link{Rsi}}, \code{\link{Sma}}, \code{\link{Tick}}
-
-Other c++ indicators: \code{\link{BBands}},
-  \code{\link{Crossover}}, \code{\link{Ema}},
-  \code{\link{Indicator}}, \code{\link{RollLinReg}},
-  \code{\link{RollPercentRank}}, \code{\link{RollRange}},
-  \code{\link{RollSd}}, \code{\link{RollVolumeProfile}},
-  \code{\link{Rsi}}, \code{\link{Sma}}
 }
-

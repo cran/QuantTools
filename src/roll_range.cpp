@@ -17,7 +17,8 @@
 
 #include "../inst/include/Indicators/RollRange.h"
 
-//' @title Rolling Range
+//' Rolling Range
+//'
 //' @name roll_range
 //' @param x numeric vectors
 //' @param n window size
@@ -29,7 +30,7 @@
 //' @description Rolling range is minimum and maximum values over n past values. Can be used to identify price range.
 //' @export
 // [[Rcpp::export]]
-Rcpp::DataFrame roll_range( Rcpp::NumericVector x, std::size_t n ) {
+Rcpp::List roll_range( Rcpp::NumericVector x, std::size_t n ) {
 
   RollRange range( n );
 

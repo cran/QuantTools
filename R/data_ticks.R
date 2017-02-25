@@ -20,6 +20,4 @@
 #' @name ticks
 #' @docType data
 #' @keywords data
-#' @description
-#' Example intraday tick data.
 NULL

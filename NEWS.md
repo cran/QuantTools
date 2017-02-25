@@ -1,3 +1,25 @@
+#### v0.5.4:
+- `Processor` multiple options support added. You can set trading hours, latency, portfolio value stop loss and stop draw down, trading start time.
+    - use `SetTradingHours( double start, double end )` method to set trading hours and `onMarketOpen()`, `onMarketClose()` events to act on trading hours `start` and `end`. Use `IsTradingHoursSet()` method to check if trading hours are set.
+    - use `SetLatency( double x )`, `SetLatencySend( double x )`, `SetLatencyReceive( double x )` to set latency.
+    - use `SetStop( Rcpp::List stop )` to set stop on portfolio negative market value and/or on portfolio draw down thresholds. `StopTrading()` method can be used to stop trading. Use `CanTrade()` to check if trading stopped. 
+    - use `SetStartTradingTime( double t )` method to prevent order placing until time `t`.
+    - use `SetOptions( Rcpp::List options )` to set any of above options using single list. `?Processor` 'Options' section for details.
+- `Processor` trade cost and R Squared calculation fixed.
+- `GetOnDayClosePerformanceHistory()` also returns average trade P&L ( `avg_pnl` ) and number of trades ( `n_per_day` ) per date. `return` first value set to `pnl`.
+- `to_UTC` function added to convert time zone to 'UTC' without changing time value.
+- `bw` function now selects time with `1e-6` precision and selects all if interval set to `NULL`
+- `multi_heatmap` user axes support added.
+- `plot_table` completely rewritten. See help for details.
+- IQFeed hidden functionality added.
+    - `QuantTools:::.get_iqfeed_security_types_info()`
+    - `QuantTools:::.get_iqfeed_symbol_info( symbol, type_ids )`
+- `get_iqfeed_data` current date check omited.
+- `to_ticks` minimum volume set to 1.
+- `ListBuilder` completely rewritten due to random errors and crashes. Should be used only with `Rcpp::List` class. `AsDataTable()` and `AsDataFrame()` methods should be used to tell R that created list is `data.table` and `data.frame` correspondingly.
+- `IntToDate` return type set to `Rcpp::IntegerVector`.
+- `Alarm` C++ class added.
+
 #### v0.5.3:
 - `round_POSIXct` `days` units support added.
 - IQFeed local storage `1min` to `day` period support added.

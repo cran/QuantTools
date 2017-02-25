@@ -25,23 +25,22 @@
 class ListBuilder {
 private:
 
-  std::vector<std::string> names;
-  std::vector<SEXP> elements;
+  std::vector< std::string > names;
+  std::vector< SEXP > elements;
+  size_t nProtected;
+  ListBuilder( ListBuilder const& ) {};
 
-  ListBuilder(ListBuilder const&) {};
+  std::string type;
 
 public:
 
-  ListBuilder() {};
+  ListBuilder() { nProtected = 0; type = "list"; };
   ~ListBuilder() {};
-  template <typename T>
-  inline ListBuilder& Add( std::string name, T x ) {
 
-    names.push_back( name );
-    elements.push_back( Rcpp::wrap( x ) );
-    return *this;
+  inline ListBuilder& AsDataFrame( ) { type = "data.frame"; return *this; }
 
-  }
+  inline ListBuilder& AsDataTable( ) { type = "data.table"; return *this; }
+
   inline ListBuilder& Add( Rcpp::DataFrame x ) {
 
     std::vector< std::string > names = x.names();
@@ -53,27 +52,57 @@ public:
     }
     return *this;
   }
-  inline operator Rcpp::List() const {
 
-    Rcpp::List list( elements.size() );
+  inline ListBuilder& Add( Rcpp::List x ) {
 
-    for ( size_t i = 0; i < elements.size(); ++i ) {
+    std::vector< std::string > names = x.names();
+    for ( int i = 0; i < x.size(); ++i ) {
 
-      list[i] = elements[i];
+      this->names.push_back( names[i] );
+      elements.push_back( x[i] );
 
     }
-    list.attr( "names" ) = Rcpp::wrap( names );
-    return list;
+    return *this;
+  }
+
+  template <typename T>
+  inline ListBuilder& Add( const std::string& name, const T& x ) {
+
+    names.push_back( name) ;
+    elements.push_back( PROTECT( Rcpp::wrap( x ) ) );
+    nProtected++;
+    return *this;
 
   }
 
-  inline operator Rcpp::DataFrame() const {
+  inline operator Rcpp::List() const {
 
-    Rcpp::List df = static_cast< Rcpp::List >( *this );
-    setDT( df );
-    return df;
+    Rcpp::List result( elements.size() );
+
+    for( size_t i = 0; i < elements.size(); ++i ) result[i] = elements[i];
+
+    result.attr( "names" ) = Rcpp::wrap( names );
+
+    if( type == "data.frame" ) {
+
+      result.attr( "class"     ) = "data.frame";
+      result.attr( "row.names" ) = Rcpp::IntegerVector::create( NA_INTEGER, XLENGTH( elements[0] ) );
+
+    }
+
+    if( type == "data.table" ) {
+
+      setDT( result );
+
+    }
+
+    UNPROTECT( nProtected );
+    return result;
 
   }
+
+  inline operator Rcpp::DataFrame() const { return R_NilValue; }
 
 };
+
 #endif //LISTBUILDER_H

@@ -21,9 +21,5 @@ back_test(enter, exit, price, stop_loss = -1000, side = 1L)
 trades data.table with columns \code{ price_enter,price_exit,mtm_min,mtm_max,id_enter,id_exit,pnl_trade,side}
 }
 \description{
-Generic back test function
-}
-\details{
 Back test by enter and exit signals with stop loss on price history. Execution is immediate. Useful for testing on daily data.
 }
-

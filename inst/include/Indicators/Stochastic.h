@@ -37,7 +37,7 @@ public:
 };
 
 template< typename Input >
-class Stochastic : public Indicator< Input, StochasticValue, Rcpp::DataFrame > {
+class Stochastic : public Indicator< Input, StochasticValue, Rcpp::List > {
 
   private:
 
@@ -111,9 +111,9 @@ class Stochastic : public Indicator< Input, StochasticValue, Rcpp::DataFrame > {
 
     StochasticValue GetValue() { return info; }
 
-    Rcpp::DataFrame GetHistory() {
+    Rcpp::List GetHistory() {
 
-      Rcpp::DataFrame history = ListBuilder()
+      Rcpp::List history = ListBuilder().AsDataTable()
       .Add( "k_fast", kFastHistory )
       .Add( "d_fast", dFastHistory )
       .Add( "d_slow", dSlowHistory );

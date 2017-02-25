@@ -18,7 +18,8 @@
 #include "../inst/include/Indicators/Crossover.h"
 #include <stdexcept>
 
-//' @title Crossover
+//' Crossover
+//'
 //' @name crossover
 //' @param x,y numeric vectors
 //' @family technical indicators

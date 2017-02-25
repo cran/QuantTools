@@ -2,9 +2,9 @@
 % Please edit documentation in R/doc_Crossover.R
 \name{Crossover}
 \alias{Crossover}
-\title{c++ Crossover class}
+\title{C++ Crossover class}
 \description{
-c++ class documentation
+C++ class documentation
 }
 \details{
 R function \link{crossover}.
@@ -25,8 +25,16 @@ R function \link{crossover}.
 \cr \code{GetHistory()}                             \tab \code{factor}               \tab factor vector with levels \code{UP, DN}
 }
 }
+
 \seealso{
-Other c++ classes: \code{\link{BBands}},
+Other C++ indicators: \code{\link{BBands}},
+  \code{\link{Ema}}, \code{\link{Indicator}},
+  \code{\link{RollLinReg}}, \code{\link{RollPercentRank}},
+  \code{\link{RollRange}}, \code{\link{RollSd}},
+  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
+  \code{\link{Sma}}, \code{\link{Stochastic}}
+
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Ema}}, \code{\link{Indicator}},
   \code{\link{Order}}, \code{\link{Processor}},
@@ -35,12 +43,4 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
-
-Other c++ indicators: \code{\link{BBands}},
-  \code{\link{Ema}}, \code{\link{Indicator}},
-  \code{\link{RollLinReg}}, \code{\link{RollPercentRank}},
-  \code{\link{RollRange}}, \code{\link{RollSd}},
-  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
-  \code{\link{Sma}}, \code{\link{Stochastic}}
 }
-

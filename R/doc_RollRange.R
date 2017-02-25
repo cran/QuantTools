@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Rolling Range / Quantile class
-#' @description c++ class documentation
+#' @title C++ Rolling Range / Quantile class
+#' @description C++ class documentation
 #' @section Usage: \code{RollRange( int n, double p = 0.5 )}
 #' @param n indicator period
 #' @param p probability value \code{[0, 1]}
 #' @details R functions \link{roll_range}, \link{roll_quantile}, \link{roll_min}, \link{roll_max}.
-#' @family c++ indicators
-#' @family c++ classes
+#' @family C++ indicators
+#' @family C++ classes
 #'
 #' @section Public Members and Methods:
 #' \tabular{lll}{
@@ -34,7 +34,7 @@
 #' \cr \code{GetMinHistory()}        \tab \code{std::vector< double >}\tab return min history
 #' \cr \code{GetMaxHistory()}        \tab \code{std::vector< double >}\tab return max history
 #' \cr \code{GetQuantileHistory()}   \tab \code{std::vector< double >}\tab return quantile history
-#' \cr \code{GetHistory()}           \tab \code{DataFrame}            \tab return values history data.table with columns \code{min, max}
+#' \cr \code{GetHistory()}           \tab \code{List}                 \tab return values history data.table with columns \code{min, max}
 #' }
 #'
 #' @name RollRange

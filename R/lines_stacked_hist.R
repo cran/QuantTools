@@ -23,10 +23,7 @@
 #' @param col colors of segments
 #' @param ordered should stacked bars be in order?
 #' @family graphical functions
-#'
-#' @details
-#' Used in \code{\link{plot_ts}} internally.
-#'
+#' @details Used in \code{\link{plot_ts}} internally.
 #' @export
 lines_stacked_hist <- function(x = 1:nrow(data),data,width = 'auto',col = 'auto',ordered = TRUE)  {
 

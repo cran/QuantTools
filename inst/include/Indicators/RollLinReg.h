@@ -33,7 +33,7 @@ public:
 
 };
 
-class RollLinReg : public Indicator< std::pair< double, double >, double, Rcpp::DataFrame > {
+class RollLinReg : public Indicator< std::pair< double, double >, double, Rcpp::List > {
 
 private:
 
@@ -112,16 +112,16 @@ public:
 
     if( IsFormed() ) {
 
-      alphaHistory.push_back( coeffs.alpha );
-      betaHistory.push_back( coeffs.beta );
-      rHistory.push_back( coeffs.r );
+      alphaHistory   .push_back( coeffs.alpha    );
+      betaHistory    .push_back( coeffs.beta     );
+      rHistory       .push_back( coeffs.r        );
       rSquaredHistory.push_back( coeffs.rSquared );
 
     } else {
 
-      alphaHistory.push_back( NA_REAL );
-      betaHistory.push_back( NA_REAL );
-      rHistory.push_back( NA_REAL );
+      alphaHistory   .push_back( NA_REAL );
+      betaHistory    .push_back( NA_REAL );
+      rHistory       .push_back( NA_REAL );
       rSquaredHistory.push_back( NA_REAL );
 
     }
@@ -146,21 +146,21 @@ public:
 
   }
 
-  Rcpp::DataFrame GetHistory() {
+  Rcpp::List GetHistory() {
 
-    Rcpp::DataFrame history = ListBuilder()
-    .Add( "alpha", alphaHistory )
-    .Add( "beta", betaHistory )
-    .Add( "r", rHistory )
+    Rcpp::List history = ListBuilder().AsDataTable()
+    .Add( "alpha"    , alphaHistory    )
+    .Add( "beta"     , betaHistory     )
+    .Add( "r"        , rHistory        )
     .Add( "r.squared", rSquaredHistory );
     return history;
 
     return history;
   }
 
-  std::vector< double > GetAlphaHistory() { return alphaHistory; }
-  std::vector< double > GetBetaHistory() { return betaHistory; }
-  std::vector< double > GetRHistory() { return rHistory; }
+  std::vector< double > GetAlphaHistory()    { return alphaHistory   ; }
+  std::vector< double > GetBetaHistory()     { return betaHistory    ; }
+  std::vector< double > GetRHistory()        { return rHistory       ; }
   std::vector< double > GetRSquaredHistory() { return rSquaredHistory; }
 
 };

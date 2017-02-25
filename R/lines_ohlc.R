@@ -23,10 +23,7 @@
 #' @param candle.col.up,candle.col.dn colors of up and down candles
 #' @param ch use Chinese style?
 #' @family graphical functions
-#'
-#' @details
-#' Used in \code{\link{plot_ts}} internally.
-#'
+#' @details Used in \code{\link{plot_ts}} internally.
 #' @export
 lines_ohlc <- function(x = 1:nrow(ohlc), ohlc ,width = 0.3, candle.col.up = 'blue', candle.col.dn = 'red', ch = TRUE ){
 

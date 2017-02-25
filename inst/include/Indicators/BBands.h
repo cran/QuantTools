@@ -32,7 +32,7 @@ public:
 
 };
 
-class BBands : public Indicator< double, BBandsValue, Rcpp::DataFrame > {
+class BBands : public Indicator< double, BBandsValue, Rcpp::List > {
 
 private:
 
@@ -76,9 +76,9 @@ public:
   std::vector< double > GetLowerHistory() { return lowerHistory; }
   std::vector< double > GetSmaHistory() { return smaHistory; }
 
-  Rcpp::DataFrame GetHistory() {
+  Rcpp::List GetHistory() {
 
-    Rcpp::DataFrame history = ListBuilder()
+    Rcpp::List history = ListBuilder().AsDataTable()
     .Add( "lower", lowerHistory )
     .Add( "upper", upperHistory )
     .Add( "sma"  , smaHistory   );

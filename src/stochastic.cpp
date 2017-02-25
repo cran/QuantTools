@@ -17,7 +17,8 @@
 
 #include "../inst/include/Indicators/Stochastic.h"
 
-//' @title Stochastic
+//' Stochastic
+//'
 //' @name stochastic
 //' @param n window size
 //' @param x \code{high, low, close} data.frame or numeric vector
@@ -28,7 +29,7 @@
 //' @description Stochastic oscillator shows position of price in respect to its range over n past values.
 //' @export
 // [[Rcpp::export]]
-Rcpp::DataFrame stochastic( SEXP x, size_t n, size_t nFast, size_t nSlow ) {
+Rcpp::List stochastic( SEXP x, size_t n, size_t nFast, size_t nSlow ) {
 
 
   switch( TYPEOF( x ) ) {

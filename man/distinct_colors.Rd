@@ -23,4 +23,3 @@ Other graphical functions: \code{\link{add_last_values}},
   \code{\link{plot_ts}}
 }
 \keyword{datasets}
-

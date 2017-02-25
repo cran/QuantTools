@@ -17,7 +17,8 @@
 
 #include "../inst/include/Indicators/RollSd.h"
 
-//' @title Rolling Standard Deviation
+//' Rolling Standard Deviation
+//'
 //' @name roll_sd
 //' @param x numeric vector
 //' @param n window size

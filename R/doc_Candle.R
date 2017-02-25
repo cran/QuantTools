@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Candle class
-#' @description c++ class documentation
+#' @title C++ Candle class
+#' @description C++ class documentation
 #' @section Usage: \code{Candle{ int id, double open, double high, double low,
 #' double close, double time, int volume, int timeFrame }}
 #' @param id id
@@ -30,5 +30,5 @@
 #' @name Candle
 #' @rdname cpp_Candle
 #' @family backtesting classes
-#' @family c++ classes
+#' @family C++ classes
 NULL

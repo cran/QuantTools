@@ -18,30 +18,44 @@
 #' Multi Dimensional Heat Map
 #'
 #' @param x \code{data.table} object
-#' @param pars names of parameters. Parameters combinations must be unique
+#' @param pars names of parameters. Parameters combinations must be unique. To specify x and y axes use \code{list( x = ..., y = ... )}.
 #' @param value name of value parameter
 #' @param col_pos,col_neg used to generate gradient
 #' @param peak_value normalization value
 #' @family graphical functions
-#'
-#' @details
-#' Plots multi dimensional heatmap. Axes drawn automatically by layers.
+#' @details Plots multi dimensional heatmap. Axes drawn automatically by layers.
 #' Inner axes are most frequent and outer axes are less frequent.
-#'
-#'
 #' @export
 multi_heatmap = function( x, pars, value, col_neg = c( 'darkblue', 'lightblue' ), col_pos = c( 'yellow', 'darkgreen' ), peak_value = x[ , max( abs( get( value ) ), na.rm = T ) ] ) {
 
-  axes = lapply_named( pars, function( par ) x[, unique( get( par ) ) ] )
-  n_axes   = length( pars )
-  n_axes_y = floor( n_axes / 2 )
-  n_axes_x = ceiling( n_axes / 2 )
+  if( is.list( pars ) ) {
 
-  # order by decreasing parameters length
-  axes = axes[ order( -sapply( axes, length ) ) ]
+    axes = lapply_named( unlist( pars ), function( par ) x[, unique( get( par ) ) ] )
 
-  axes_y_id = c( 1:n_axes_y + 1 )
-  axes_x_id = c( 1, if( n_axes > 2 ) 2:n_axes_x + n_axes_y )
+    n_axes   = length( axes )
+    n_axes_y = length( pars[[2]] )
+    n_axes_x = length( pars[[1]] )
+
+    axes_y_id = 1:n_axes_y + n_axes_x
+    axes_x_id = 1:n_axes_x
+
+
+  } else {
+
+    axes = lapply_named( pars, function( par ) x[, unique( get( par ) ) ] )
+    n_axes   = length( pars )
+    n_axes_y = floor( n_axes / 2 )
+    n_axes_x = ceiling( n_axes / 2 )
+
+    # order by decreasing parameters length
+    axes = axes[ order( -sapply( axes, length ) ) ]
+    axes_y_id = c( 1:n_axes_y + 1 )
+    axes_x_id = c( 1, if( n_axes > 2 ) 2:n_axes_x + n_axes_y )
+
+  }
+
+
+
 
   axes_y = axes[ axes_y_id ]
   axes_x = axes[ axes_x_id ]

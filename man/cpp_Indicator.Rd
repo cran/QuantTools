@@ -2,7 +2,7 @@
 % Please edit documentation in R/doc_Indicator.R
 \name{Indicator}
 \alias{Indicator}
-\title{c++ Indicator Base class}
+\title{C++ Indicator Base class}
 \arguments{
 \item{InputType}{input type}
 
@@ -11,7 +11,7 @@
 \item{HistoryType}{history type}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \section{Usage}{
  \code{class AnyIndicator : public Indicator< InputType, ValueType, HistoryType > { }}
@@ -28,12 +28,20 @@ Following methods must be specified for \code{AnyIndicator}
 \cr \code{GetHistory()}                     \tab \code{HistoryType}   \tab return values history
 }
 }
+
 \seealso{
 Other backtesting classes: \code{\link{Candle}},
   \code{\link{Cost}}, \code{\link{Order}},
   \code{\link{Processor}}, \code{\link{Tick}}
 
-Other c++ classes: \code{\link{BBands}},
+Other C++ indicators: \code{\link{BBands}},
+  \code{\link{Crossover}}, \code{\link{Ema}},
+  \code{\link{RollLinReg}}, \code{\link{RollPercentRank}},
+  \code{\link{RollRange}}, \code{\link{RollSd}},
+  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
+  \code{\link{Sma}}, \code{\link{Stochastic}}
+
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Crossover}}, \code{\link{Ema}},
   \code{\link{Order}}, \code{\link{Processor}},
@@ -42,12 +50,4 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
-
-Other c++ indicators: \code{\link{BBands}},
-  \code{\link{Crossover}}, \code{\link{Ema}},
-  \code{\link{RollLinReg}}, \code{\link{RollPercentRank}},
-  \code{\link{RollRange}}, \code{\link{RollSd}},
-  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
-  \code{\link{Sma}}, \code{\link{Stochastic}}
 }
-

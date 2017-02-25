@@ -3,20 +3,21 @@
 
 #' Generic back test function
 #'
+#' @name back_test
 #' @param enter bool vector of length n of enter signals
 #' @param exit bool vector of length n of exit signals
 #' @param price numeric vector of length n of prices
 #' @param stop_loss relative stop loss, must be negative
 #' @param side direction of enter order, \code{-1}:short, \code{1}:long
+#' @description Back test by enter and exit signals with stop loss on price history. Execution is immediate. Useful for testing on daily data.
 #' @return trades data.table with columns \code{ price_enter,price_exit,mtm_min,mtm_max,id_enter,id_exit,pnl_trade,side}
-#' @details Back test by enter and exit signals with stop loss on price history. Execution is immediate. Useful for testing on daily data.
-#' @name back_test
 #' @export
 back_test <- function(enter, exit, price, stop_loss = -1000, side = 1L) {
     .Call('QuantTools_back_test', PACKAGE = 'QuantTools', enter, exit, price, stop_loss, side)
 }
 
-#' @title Bollinger Bands
+#' Bollinger Bands
+#'
 #' @name bbands
 #' @param x numeric vectors
 #' @param n window size
@@ -30,7 +31,8 @@ bbands <- function(x, n, k) {
     .Call('QuantTools_bbands', PACKAGE = 'QuantTools', x, n, k)
 }
 
-#' @title Crossover
+#' Crossover
+#'
 #' @name crossover
 #' @param x,y numeric vectors
 #' @family technical indicators
@@ -40,7 +42,8 @@ crossover <- function(x, y) {
     .Call('QuantTools_crossover', PACKAGE = 'QuantTools', x, y)
 }
 
-#' @title Exponential Moving Average
+#' Exponential Moving Average
+#'
 #' @param x numeric vectors
 #' @param n window size
 #' @family technical indicators
@@ -51,16 +54,16 @@ ema <- function(x, n) {
 }
 
 #' Last Observation Carried Forward
-#' @title Last Observation Carried Forward
-#' @param x numeric vector to roll through
 #'
+#' @param x numeric vector to roll through
 #' @name na_locf
 #' @export
 na_locf <- function(x) {
     .Call('QuantTools_na_locf', PACKAGE = 'QuantTools', x)
 }
 
-#' @title Rolling Linear Regression
+#' Rolling Linear Regression
+#'
 #' @name roll_lm
 #' @param n window size
 #' @param x,y numeric vectors
@@ -79,7 +82,8 @@ roll_correlation <- function(x, y, n) {
     .Call('QuantTools_roll_correlation', PACKAGE = 'QuantTools', x, y, n)
 }
 
-#' @title Rolling Percent Rank
+#' Rolling Percent Rank
+#'
 #' @name roll_percent_rank
 #' @param x numeric vector
 #' @param n window size
@@ -90,7 +94,8 @@ roll_percent_rank <- function(x, n) {
     .Call('QuantTools_roll_percent_rank', PACKAGE = 'QuantTools', x, n)
 }
 
-#' @title Rolling Range
+#' Rolling Range
+#'
 #' @name roll_range
 #' @param x numeric vectors
 #' @param n window size
@@ -123,19 +128,8 @@ roll_max <- function(x, n) {
     .Call('QuantTools_roll_max', PACKAGE = 'QuantTools', x, n)
 }
 
-#' @title Rolling Standard Deviation
-#' @name roll_sd
-#' @param x numeric vector
-#' @param n window size
-#' @family technical indicators
-#' @description Rolling standard deviation shows standard deviation over n past values.
-#' @export
-roll_sd <- function(x, n) {
-    .Call('QuantTools_roll_sd', PACKAGE = 'QuantTools', x, n)
-}
-
+#' Rolling Filter
 #'
-#' @title Rolling Filter
 #' @name roll_sd_filter
 #' @param x numeric vector
 #' @param n window size
@@ -147,7 +141,20 @@ roll_sd_filter <- function(x, n, k = 1, m = 10L) {
     .Call('QuantTools_roll_sd_filter', PACKAGE = 'QuantTools', x, n, k, m)
 }
 
-#' @title Rolling Volume Profile
+#' Rolling Standard Deviation
+#'
+#' @name roll_sd
+#' @param x numeric vector
+#' @param n window size
+#' @family technical indicators
+#' @description Rolling standard deviation shows standard deviation over n past values.
+#' @export
+roll_sd <- function(x, n) {
+    .Call('QuantTools_roll_sd', PACKAGE = 'QuantTools', x, n)
+}
+
+#' Rolling Volume Profile
+#'
 #' @name roll_volume_profile
 #' @param ticks read 'Ticks' section in \link{Processor}
 #' @param timeFrame indicator period in seconds, when to apply alpha correction
@@ -162,7 +169,8 @@ roll_volume_profile <- function(ticks, timeFrame, step, alpha, cut) {
     .Call('QuantTools_roll_volume_profile', PACKAGE = 'QuantTools', ticks, timeFrame, step, alpha, cut)
 }
 
-#' @title Relative Strength Index
+#' Relative Strength Index
+#'
 #' @param x numeric vectors
 #' @param n window size
 #' @family technical indicators
@@ -176,7 +184,8 @@ run_tests <- function() {
     .Call('QuantTools_run_tests', PACKAGE = 'QuantTools')
 }
 
-#' @title Simple Moving Average
+#' Simple Moving Average
+#'
 #' @param x numeric vectors
 #' @param n window size
 #' @family technical indicators
@@ -186,7 +195,8 @@ sma <- function(x, n) {
     .Call('QuantTools_sma', PACKAGE = 'QuantTools', x, n)
 }
 
-#' @title Stochastic
+#' Stochastic
+#'
 #' @name stochastic
 #' @param n window size
 #' @param x \code{high, low, close} data.frame or numeric vector
@@ -200,12 +210,11 @@ stochastic <- function(x, n, nFast, nSlow) {
     .Call('QuantTools_stochastic', PACKAGE = 'QuantTools', x, n, nFast, nSlow)
 }
 
-#' Convert ticks to candles.
-#' @title Convert ticks to candles
+#' Convert ticks to candles
+#'
 #' @name to_candles
 #' @param ticks read 'Ticks' section in \link{Processor}
 #' @param timeframe candle timeframe in seconds
-#'
 #' @return data.table with columns \code{time, open, high, low, close, volume, id}. Where \code{id} is row number of last tick in candle. \cr
 #' Note: last candle is always omitted.
 #' @rdname to_candles

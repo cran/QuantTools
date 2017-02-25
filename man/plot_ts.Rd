@@ -2,6 +2,7 @@
 % Please edit documentation in R/plot_ts.R
 \name{plot_ts}
 \alias{plot_ts}
+\alias{plot_ts}
 \alias{t_to_x}
 \title{Plot time series}
 \usage{
@@ -51,20 +52,22 @@ t_to_x(t)
 Plot time series
 }
 \details{
-Plots time series each represented by columns of \code{times_series} on single plot.
+Plots time series each represented by columns of \code{times_series} on single plot. \cr
 As for OHLC series, only one can be plotted and should be passed as \code{times_series} with 4 columns \code{'open','high','low','close'}.
 }
 \examples{
 \donttest{
-time_series <- get_finam_data( 'SBER', '2014-01-10', '2014-08-13', period = '10min' )
 
-plot_ts( time_series[ time \%bw\% '2014-08-13', list( time, open, high, low, close ) ] )
-plot_ts( time_series[ time \%bw\% '2014-08-13', list( time, volume = volume / 1e6 )  ] , type = 'h' )
-plot_ts( time_series[ time \%bw\% '2014-08', list( time, close ) ] )
+data( ticks )
+
+time_series = to_candles( ticks, 60 * 10 )
+
+plot_ts( time_series[ time \%bw\% '2016-05-13', list( time, open, high, low, close ) ] )
+plot_ts( time_series[ time \%bw\% '2016-05-13', list( time, volume = volume / 1e6 )  ] , type = 'h' )
+plot_ts( time_series[ time \%bw\% '2016-05', list( time, close ) ] )
 plot_ts( time_series[ , list( time, close ) ] )
 }
 \donttest{
-time_series <- get_finam_data( 'SBER', '2014-01-10', '2014-08-13', period = '10min' )
 
 mar = par( 'mar' )
 par( mar = c( 0, 4, 0, 4 ), xaxt = 'n' )
@@ -73,10 +76,12 @@ layout ( matrix( 1:(3 + 2) ), heights = c( 1, 4, 2, 2, 1 ) )
   plot_ts( time_series[ , list( time, open, high, low, close ) ] )
   plot_ts( time_series[ , list( time, close ) ] )
   par( xaxt = 's' )
-  plot_ts( time_series[ , list( time, vol = vol / 1e6 ) ], type = 'h' )
+  plot_ts( time_series[ , list( time, volume = volume / 1e6 ) ], type = 'h' )
   empty_plot()
 par( mar = mar )
+layout( matrix(1) )
 }
+
 
 }
 \seealso{
@@ -87,4 +92,3 @@ Other graphical functions: \code{\link{add_last_values}},
   \code{\link{lines_stacked_hist}},
   \code{\link{multi_heatmap}}, \code{\link{plot_table}}
 }
-

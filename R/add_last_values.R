@@ -21,10 +21,7 @@
 #' @param ylim user specified range of \code{data}
 #' @param col same as in \code{\link{plot_ts}}
 #' @family graphical functions
-#'
-#' @details
-#' Used in \code{\link{plot_ts}} internally.
-#'
+#' @details Used in \code{\link{plot_ts}} internally.
 #' @export
 add_last_values <- function(data,ylim,col){
 

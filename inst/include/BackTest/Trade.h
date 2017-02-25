@@ -18,13 +18,9 @@
 #ifndef TRADE_H
 #define TRADE_H
 
-#include <Rcpp.h>
-#include "Tick.h"
-#include <vector>
-
 enum class TradeSide: int { LONG, SHORT };
 
-enum class TradeState: int { NEW, OPENED, CLOSED };
+enum class TradeState: int { NEW, OPENED, CLOSED, CLOSING };
 
 class Trade {
 
@@ -53,6 +49,7 @@ class Trade {
 
     bool IsOpened() { return state == TradeState::OPENED; }
     bool IsClosed() { return state == TradeState::CLOSED; }
+    bool IsClosing(){ return state == TradeState::CLOSING;}
     bool IsNew()    { return state == TradeState::NEW;    }
     bool IsLong()   { return side  == TradeSide::LONG;    }
     bool IsShort()  { return side  == TradeSide::SHORT;   }

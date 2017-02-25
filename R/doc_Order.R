@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Order class
-#' @description c++ class documentation
+#' @title C++ Order class
+#' @description C++ class documentation
 #' @section Usage: \code{Order( OrderSide side, OrderType type, double price, std::string comment, int idTrade )}
 #' @param side \code{BUY} or \code{SELL}
 #' @param type \code{LIMIT} or \code{MARKET}
@@ -24,7 +24,7 @@
 #' @param comment arbitrary comment
 #' @param idTrade trade id for grouping multiple orders into trades
 #' @family backtesting classes
-#' @family c++ classes
+#' @family C++ classes
 #'
 #' @section Public Members and Methods:
 #' \tabular{lll}{

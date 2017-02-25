@@ -26,6 +26,7 @@
 #include "../CppToR.h"
 #include "../ListBuilder.h"
 #include "../NPeriods.h"
+#include "../setDT.h"
 #include <cmath>
 #include <Rcpp.h>
 
@@ -80,6 +81,11 @@ private:
   std::vector<double> onDayCloseHistoryMarketValueChange;
   std::vector<double> onDayCloseHistoryDrawDown;
   std::vector<int>    onDayCloseHistoryDates;
+  std::vector<int>    onDayCloseHistoryNTrades;
+  std::vector<double> onDayCloseHistoryAvgTradePnl;
+
+  int onDayCloseNTrades;
+  double onDayCloseTradePnl;
 
   std::vector<double> onCandleHistoryMarketValue;
   std::vector<double> onCandleHistoryDrawDown;
@@ -99,7 +105,9 @@ private:
   double sumRR;
   double tdv;
 
-  const int nTradingDaysInYear = 252;
+public:
+
+  int nTradingDaysInYear = 252;
   std::string timeZone = "UTC";
 
 public:
@@ -151,6 +159,10 @@ public:
     onDayCloseHistoryMarketValueChange.clear();
     onDayCloseHistoryDrawDown         .clear();
     onDayCloseHistoryDates            .clear();
+    onDayCloseHistoryAvgTradePnl      .clear();
+    onDayCloseHistoryNTrades          .clear();
+    onDayCloseNTrades  = 0;
+    onDayCloseTradePnl = 0;
 
     onCandleHistoryMarketValue   .clear();
     onCandleHistoryDrawDown      .clear();
@@ -167,12 +179,24 @@ public:
 
   }
 
+  void Update( double timeTrade ) {
+
+    int date = timeTrade / nSecondsInDay;
+
+    if( date != this->date ) {
+
+      this->date = date;
+      nDaysTraded++;
+
+    }
+
+  }
+
   void Update( Order* order ) {
 
     if( order->IsNew() ) {
 
       positionPlanned += order->side == OrderSide::BUY ? +1 : -1;
-
 
     }
 
@@ -248,17 +272,22 @@ public:
 
     }
 
+    onDayCloseTradePnl += trade->pnlRel;
+    onDayCloseNTrades ++;
+
   }
 
   void onDayStart() { // previous day close
 
     onDayCloseHistoryDates.push_back( prevTickTime / nSecondsInDay );
 
-    double marketValueChange = nDaysTested == 0 ? 0 : marketValue - onDayCloseHistoryMarketValue.back();
+    double marketValueChange = nDaysTested == 0 ? marketValue : marketValue - onDayCloseHistoryMarketValue.back();
 
     onDayCloseHistoryMarketValueChange.push_back( marketValueChange );
     onDayCloseHistoryMarketValue      .push_back( marketValue );
     onDayCloseHistoryDrawDown         .push_back( drawDown );
+    onDayCloseHistoryAvgTradePnl      .push_back( onDayCloseNTrades == 0 ? 0 : onDayCloseTradePnl / onDayCloseNTrades );
+    onDayCloseHistoryNTrades          .push_back( onDayCloseNTrades );
 
     nDaysTested++;
 
@@ -268,13 +297,15 @@ public:
     sumR    += marketValueChange;
     sumRR   += marketValueChange * marketValueChange;
 
-    double covNV = nDaysTested * sumNV - sumV * nDaysTested * ( nDaysTested + 1 ) / 2; // * 1.0 / ( n * ( n - 1 ) )
-    double varN  = nDaysTested * nDaysTested * ( nDaysTested * nDaysTested - 1 ) / 12; // * 1.0 / ( n * ( n - 1 ) )
-    double varV  = nDaysTested * sumVV - sumV * sumV;                                  // * 1.0 / ( n * ( n - 1 ) )
+    double covNV = nDaysTested * sumNV - sumV * nDaysTested * ( nDaysTested + 1 ) / 2;    // * 1.0 / ( n * ( n - 1 ) )
+    double sdN  = nDaysTested * std::sqrt( ( nDaysTested * nDaysTested - 1 ) * 1. / 12 ); // * sqrt( 1.0 / ( n * ( n - 1 ) ) )
+    double sdV  = std::sqrt( nDaysTested * sumVV - sumV * sumV );                         // * sqrt( 1.0 / ( n * ( n - 1 ) ) )
 
-    double r = /*varV == 0 or varN == 0 ? NAN : */covNV / std::sqrt( varN * varV );
+    double r = /*varV == 0 or varN == 0 ? NAN : */covNV / sdN / sdV;
 
     rSquared = r * r;
+
+    //Rcpp::Rcout << "nDaysTested = "<< nDaysTested << " covNV = " << covNV << " sdN = " << sdN << " sdV = " << sdV << " rSquared = " << rSquared << std::endl;
 
     double avgR = sumR / nDaysTested;
     double varR = /*nDaysTested < 2 ? NAN : */( nDaysTested * sumRR - sumR * sumR ) / nDaysTested / ( nDaysTested - 1 );
@@ -287,6 +318,10 @@ public:
     sortino = /*tdv == 0 ? NAN : */avgR / std::sqrt( tdv ) * std::sqrt( nTradingDaysInYear );
 
     avgDrawDown = ( avgDrawDown * ( nDaysTested - 1 ) + drawDown ) / nDaysTested;
+
+    onDayCloseNTrades  = 0;
+    onDayCloseTradePnl = 0;
+
 
   }
 
@@ -365,13 +400,13 @@ public:
 
   }
 
-  Rcpp::DataFrame GetSummary() {
+  Rcpp::List GetSummary() {
 
     double percents    = 100;
     double basisPoints = 10000;
     double epsilon     = 0.01;
 
-    Rcpp::DataFrame summary = ListBuilder()
+    Rcpp::List summary = ListBuilder().AsDataTable()
 
       .Add( "from"          , DoubleToDateTime( testStart, timeZone )                      )
       .Add( "to"            , DoubleToDateTime( testEnd  , timeZone )                      )

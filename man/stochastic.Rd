@@ -29,4 +29,3 @@ Other technical indicators: \code{\link{bbands}},
   \code{\link{roll_volume_profile}}, \code{\link{rsi}},
   \code{\link{sma}}
 }
-

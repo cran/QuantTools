@@ -23,10 +23,7 @@
 #' @param lty,lwd same as in \code{\link[graphics]{lines}}
 #' @param pch same as in \code{\link[graphics]{points}}
 #' @family graphical functions
-#'
-#' @details
-#' Used in \code{\link{plot_ts}} internally.
-#'
+#' @details Used in \code{\link{plot_ts}} internally.
 #' @export
 add_legend <- function(position = 'topright', names, col = 'auto', lty = 1, lwd = 1, pch = NA){
 

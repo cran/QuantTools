@@ -21,7 +21,6 @@
 #' @param key column name to merge by
 #' @param value column name of value variable
 #' @param na.omit should leading NA values be omitted?
-#'
 #' @examples
 #' \donttest{
 #' from = '1990-01-01'

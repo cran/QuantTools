@@ -23,7 +23,6 @@
 #' @param day_exp expiration day number, e.g. 15 for middle of month
 #' @param year_last_digit should only last digit of year present in code?
 #' @return returns \code{data.table} with columns \code{code, from, to, contract_id}.
-#'
 #' @export
 gen_futures_codes = function( contract, from, to, frequency, day_exp, year_last_digit = FALSE ){
 

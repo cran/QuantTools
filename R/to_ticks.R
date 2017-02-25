@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' Convert Candles To Ticks
-#' @title Convert candles to ticks
+#' Convert candles to ticks
+#'
 #' @param x candles, read 'Candles' in \link{Processor}
 #' @name to_ticks
 #' @details Convert OHLCV candles to ticks using the following model. One candle is equivalent to four ticks \code{( time, price, volume )}: \code{( time - period, open, volume / 4 ); ( time - period / 2, high, volume / 4 ); ( time - period / 2, low, volume / 4 ); ( time - period / 100, close, volume / 4 )}. Assuming provided candles have frequent period ( less than a minute ) it is a good approximation for tick data which can be used to speed up back testing or if no raw tick data available.
@@ -40,7 +40,10 @@ to_ticks = function( x ){
     price  = c( open         , high             , low              , close               ),
     volume = c( volume / 4   , volume / 4       , volume / 4       , volume / 4          )
   ) ][ order( time ) ]
+  ticks[, volume := pmax( volume, 1 ) ]
   attributes( ticks$time ) = attributes( x$time )
+
+
 
   return( ticks )
 

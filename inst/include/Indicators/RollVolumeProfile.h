@@ -23,9 +23,10 @@
 #include <set>
 #include "../BackTest/Tick.h"
 #include "../ListBuilder.h"
+#include "../CppToR.h"
 #include "Indicator.h"
 
-class RollVolumeProfile : public Indicator< Tick, std::map<double,double>, Rcpp::DataFrame > {
+class RollVolumeProfile : public Indicator< Tick, std::map<double,double>, Rcpp::List > {
 
 private:
 
@@ -37,7 +38,7 @@ private:
   double time;
 
   std::vector< double > timeHistory;
-  std::vector<Rcpp::DataFrame> volumeProfileHistory;
+  std::vector<Rcpp::List> volumeProfileHistory;
 
 public:
 
@@ -86,7 +87,7 @@ public:
       rTime.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
       rTime.attr( "tzone" ) = "UTC";
 
-      Rcpp::DataFrame volumeProfile = ListBuilder()
+      Rcpp::List volumeProfile = ListBuilder().AsDataTable()
         .Add( "time"  , rTime   )
         .Add( "price" , prices  )
         .Add( "volume", volumes );
@@ -106,16 +107,11 @@ public:
 
   std::map<double,double> GetValue() { return histogram; }
 
-  Rcpp::DataFrame GetHistory(){
+  Rcpp::List GetHistory(){
 
-    Rcpp::NumericVector timeHistory = Rcpp::wrap( this->timeHistory );
-
-    timeHistory.attr( "class" ) = Rcpp::CharacterVector::create( "POSIXct", "POSIXt" );
-    timeHistory.attr( "tzone" ) = "UTC";
-
-    Rcpp::DataFrame history = ListBuilder()
-    .Add( "time", timeHistory )
-    .Add( "profile", volumeProfileHistory );
+    Rcpp::List history = ListBuilder()
+    .Add( "time"   , DoubleToDateTime( timeHistory, "UTC" ) )
+    .Add( "profile", volumeProfileHistory                   );
     return history;
 
   }

@@ -15,15 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Indicator Base class
-#' @description c++ class documentation
+#' @title C++ Indicator Base class
+#' @description C++ class documentation
 #' @section Usage: \code{class AnyIndicator : public Indicator< InputType, ValueType, HistoryType > { }}
 #' @param InputType input type
 #' @param ValueType output type
 #' @param HistoryType history type
 #' @family backtesting classes
-#' @family c++ indicators
-#' @family c++ classes
+#' @family C++ indicators
+#' @family C++ classes
 #'
 #' @section Public Members and Methods:
 #' Following methods must be specified for \code{AnyIndicator}

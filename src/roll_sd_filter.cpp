@@ -17,8 +17,8 @@
 
 #include "../inst/include/Indicators/RollSd.h"
 
+//' Rolling Filter
 //'
-//' @title Rolling Filter
 //' @name roll_sd_filter
 //' @param x numeric vector
 //' @param n window size

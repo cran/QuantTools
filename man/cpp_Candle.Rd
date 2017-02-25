@@ -2,7 +2,7 @@
 % Please edit documentation in R/doc_Candle.R
 \name{Candle}
 \alias{Candle}
-\title{c++ Candle class}
+\title{C++ Candle class}
 \arguments{
 \item{id}{id}
 
@@ -21,18 +21,19 @@
 \item{timeFrame}{timeframe in seconds}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \section{Usage}{
  \code{Candle{ int id, double open, double high, double low,
 double close, double time, int volume, int timeFrame }}
 }
+
 \seealso{
 Other backtesting classes: \code{\link{Cost}},
   \code{\link{Indicator}}, \code{\link{Order}},
   \code{\link{Processor}}, \code{\link{Tick}}
 
-Other c++ classes: \code{\link{BBands}},
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Cost}}, \code{\link{Crossover}},
   \code{\link{Ema}}, \code{\link{Indicator}},
   \code{\link{Order}}, \code{\link{Processor}},
@@ -42,4 +43,3 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
 }
-

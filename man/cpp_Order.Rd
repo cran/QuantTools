@@ -2,7 +2,7 @@
 % Please edit documentation in R/doc_Order.R
 \name{Order}
 \alias{Order}
-\title{c++ Order class}
+\title{C++ Order class}
 \arguments{
 \item{side}{\code{BUY} or \code{SELL}}
 
@@ -15,7 +15,7 @@
 \item{idTrade}{trade id for grouping multiple orders into trades}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \section{Usage}{
  \code{Order( OrderSide side, OrderType type, double price, std::string comment, int idTrade )}
@@ -44,12 +44,13 @@ c++ class documentation
 \cr \code{Cancel()}           \tab \code{void}          \tab sends cancel request to exchange if \code{state} is \code{REGISTERED} and \code{type} is \code{LIMIT}
 }
 }
+
 \seealso{
 Other backtesting classes: \code{\link{Candle}},
   \code{\link{Cost}}, \code{\link{Indicator}},
   \code{\link{Processor}}, \code{\link{Tick}}
 
-Other c++ classes: \code{\link{BBands}},
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Crossover}}, \code{\link{Ema}},
   \code{\link{Indicator}}, \code{\link{Processor}},
@@ -59,4 +60,3 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
 }
-

@@ -2,7 +2,7 @@
 % Please edit documentation in R/doc_RollVolumeProfile.R
 \name{RollVolumeProfile}
 \alias{RollVolumeProfile}
-\title{c++ Rolling Volume Profile class}
+\title{C++ Rolling Volume Profile class}
 \arguments{
 \item{timeFrame}{indicator period in seconds, when to apply alpha correction}
 
@@ -13,7 +13,7 @@
 \item{cut}{threshold volume when to delete bar}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \details{
 R functions \link{roll_volume_profile}.
@@ -30,11 +30,19 @@ R functions \link{roll_volume_profile}.
 \cr \code{Reset()}                \tab \code{void}                   \tab reset to initial state
 \cr \code{IsFormed()}             \tab \code{bool}                   \tab is indicator value valid?
 \cr \code{GetValue()}             \tab \code{std::map<double,double>}\tab histogram where first is price and second is volume
-\cr \code{GetHistory()}           \tab \code{DataFrame}              \tab return values history data.table with columns \code{time, profile} where profile is data.table with columns \code{time, price, volume}
+\cr \code{GetHistory()}           \tab \code{List}                   \tab return values history data.table with columns \code{time, profile} where profile is data.table with columns \code{time, price, volume}
 }
 }
+
 \seealso{
-Other c++ classes: \code{\link{BBands}},
+Other C++ indicators: \code{\link{BBands}},
+  \code{\link{Crossover}}, \code{\link{Ema}},
+  \code{\link{Indicator}}, \code{\link{RollLinReg}},
+  \code{\link{RollPercentRank}}, \code{\link{RollRange}},
+  \code{\link{RollSd}}, \code{\link{Rsi}},
+  \code{\link{Sma}}, \code{\link{Stochastic}}
+
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Crossover}}, \code{\link{Ema}},
   \code{\link{Indicator}}, \code{\link{Order}},
@@ -43,12 +51,4 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{RollSd}}, \code{\link{Rsi}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
-
-Other c++ indicators: \code{\link{BBands}},
-  \code{\link{Crossover}}, \code{\link{Ema}},
-  \code{\link{Indicator}}, \code{\link{RollLinReg}},
-  \code{\link{RollPercentRank}}, \code{\link{RollRange}},
-  \code{\link{RollSd}}, \code{\link{Rsi}},
-  \code{\link{Sma}}, \code{\link{Stochastic}}
 }
-

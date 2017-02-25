@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Crossover class
-#' @description c++ class documentation
+#' @title C++ Crossover class
+#' @description C++ class documentation
 #' @section Usage: \code{Crossover}
 #' @details R function \link{crossover}.
-#' @family c++ indicators
-#' @family c++ classes
+#' @family C++ indicators
+#' @family C++ classes
 #'
 #' @section Public Members and Methods:
 #' \tabular{lll}{

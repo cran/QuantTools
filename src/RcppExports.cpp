@@ -6,7 +6,7 @@
 using namespace Rcpp;
 
 // back_test
-Rcpp::DataFrame back_test(Rcpp::LogicalVector enter, Rcpp::LogicalVector exit, Rcpp::NumericVector price, double stop_loss, int side);
+Rcpp::List back_test(Rcpp::LogicalVector enter, Rcpp::LogicalVector exit, Rcpp::NumericVector price, double stop_loss, int side);
 RcppExport SEXP QuantTools_back_test(SEXP enterSEXP, SEXP exitSEXP, SEXP priceSEXP, SEXP stop_lossSEXP, SEXP sideSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -21,7 +21,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // bbands
-Rcpp::DataFrame bbands(Rcpp::NumericVector x, std::size_t n, double k);
+Rcpp::List bbands(Rcpp::NumericVector x, std::size_t n, double k);
 RcppExport SEXP QuantTools_bbands(SEXP xSEXP, SEXP nSEXP, SEXP kSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -69,7 +69,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_lm
-Rcpp::DataFrame roll_lm(Rcpp::NumericVector x, Rcpp::NumericVector y, std::size_t n);
+Rcpp::List roll_lm(Rcpp::NumericVector x, Rcpp::NumericVector y, std::size_t n);
 RcppExport SEXP QuantTools_roll_lm(SEXP xSEXP, SEXP ySEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -107,7 +107,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_range
-Rcpp::DataFrame roll_range(Rcpp::NumericVector x, std::size_t n);
+Rcpp::List roll_range(Rcpp::NumericVector x, std::size_t n);
 RcppExport SEXP QuantTools_roll_range(SEXP xSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -155,18 +155,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// roll_sd
-std::vector<double> roll_sd(Rcpp::NumericVector x, std::size_t n);
-RcppExport SEXP QuantTools_roll_sd(SEXP xSEXP, SEXP nSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< std::size_t >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(roll_sd(x, n));
-    return rcpp_result_gen;
-END_RCPP
-}
 // roll_sd_filter
 std::vector< bool > roll_sd_filter(Rcpp::NumericVector x, int n, double k, int m);
 RcppExport SEXP QuantTools_roll_sd_filter(SEXP xSEXP, SEXP nSEXP, SEXP kSEXP, SEXP mSEXP) {
@@ -178,6 +166,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type k(kSEXP);
     Rcpp::traits::input_parameter< int >::type m(mSEXP);
     rcpp_result_gen = Rcpp::wrap(roll_sd_filter(x, n, k, m));
+    return rcpp_result_gen;
+END_RCPP
+}
+// roll_sd
+std::vector<double> roll_sd(Rcpp::NumericVector x, std::size_t n);
+RcppExport SEXP QuantTools_roll_sd(SEXP xSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< std::size_t >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_sd(x, n));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -231,7 +231,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // stochastic
-Rcpp::DataFrame stochastic(SEXP x, size_t n, size_t nFast, size_t nSlow);
+Rcpp::List stochastic(SEXP x, size_t n, size_t nFast, size_t nSlow);
 RcppExport SEXP QuantTools_stochastic(SEXP xSEXP, SEXP nSEXP, SEXP nFastSEXP, SEXP nSlowSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -245,12 +245,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // to_candles
-DataFrame to_candles(DataFrame ticks, int timeframe);
+Rcpp::List to_candles(Rcpp::DataFrame ticks, int timeframe);
 RcppExport SEXP QuantTools_to_candles(SEXP ticksSEXP, SEXP timeframeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type ticks(ticksSEXP);
+    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type ticks(ticksSEXP);
     Rcpp::traits::input_parameter< int >::type timeframe(timeframeSEXP);
     rcpp_result_gen = Rcpp::wrap(to_candles(ticks, timeframe));
     return rcpp_result_gen;

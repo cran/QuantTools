@@ -15,24 +15,38 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Processor class
-#' @description c++ class documentation
+#' @title C++ Processor class
+#' @description C++ class documentation
 #' @section Usage: \code{Processor( int timeFrame, double latencySend, double latencyReceive )}
 #' @param timeFrame candle timeframe in seconds
 #' @param latencySend,latencyReceive latency in seconds
 #' @family backtesting classes
-#' @family c++ classes
+#' @family C++ classes
 #'
 #' @section Public Members and Methods:
 #' \tabular{lll}{
 #' \cr \strong{Name}                           \tab \strong{Return Type}       \tab \strong{Description}
 #' \cr \code{onCandle( \link{Candle} candle )} \tab \code{std::function}       \tab called on new candle event
 #' \cr \code{onTick( \link{Tick} tick )}       \tab \code{std::function}       \tab called on new tick event
+#' \cr \code{onMarketOpen()}                   \tab \code{std::function}       \tab called on trading hours start
+#' \cr \code{onMarketClose()}                  \tab \code{std::function}       \tab called on trading hours end
 #' \cr \code{Feed( \link{Tick} tick )}         \tab \code{void}                \tab process by individual tick
 #' \cr \code{Feed( Rcpp::DataFrame ticks )}    \tab \code{void}                \tab batch process, see 'Ticks' section
 #' \cr \code{SendOrder( \link{Order}* order )} \tab \code{void}                \tab send order to exchange
+#'
 #' \cr \code{SetCost( \link{Cost} cost )}      \tab \code{void}                \tab set trading costs
-#' \cr \code{SetCost( Rcpp::List cost )}       \tab \code{void}                \tab same as above but with R list with columns as in \link{Cost}
+#' \cr \code{SetCost( Rcpp::List cost )}       \tab \code{void}                \tab see 'cost' in 'Options' section
+#' \cr \code{SetStop( Rcpp::List stop )}       \tab \code{void}                \tab see 'stop' in 'Options' section
+#' \cr \code{SetStartTradingTime( double t )}  \tab \code{void}                \tab see 'trade_start' in 'Options' section
+#' \cr \code{SetLatencyReceive( double x )}    \tab \code{void}                \tab see 'latency_receive' in 'Options' section
+#' \cr \code{SetLatencySend( double x )}       \tab \code{void}                \tab see 'latency_send' in 'Options' section
+#' \cr \code{SetLatency( double x )}           \tab \code{void}                \tab see 'latency' in 'Options' section
+#' \cr \code{SetTradingHours( double start, double end )}
+#'                                             \tab \code{void}                \tab see 'trading_hours' in 'Options' section
+#' \cr \code{SetOptions( Rcpp::List options )} \tab \code{void}                \tab see 'Options' section
+#' \cr \code{StopTrading()}                    \tab \code{void}                \tab if called trading stop triggered. See 'stop' in 'Options' section
+#' \cr \code{CanTrade()}                       \tab \code{bool}                \tab check if trading not stopped
+#' \cr \code{IsTradingHoursSet()}              \tab \code{bool}                \tab check if trading hours set
 #' \cr \code{CancelOrders()}                   \tab \code{void}                \tab cancel active orders
 #' \cr \code{GetPosition()}                    \tab \code{int}                 \tab total executed position, positive means long, negative means short
 #' \cr \code{GetPositionPlanned()}             \tab \code{int}                 \tab total number of orders processing ( not executed or cancelled yet )
@@ -43,11 +57,11 @@
 #' \cr \code{GetSummary()}                     \tab \code{Rcpp::List}          \tab trades summary, see 'Summary' section
 #' \cr \code{GetOnCandleMarketValueHistory()}  \tab \code{std::vector<double>} \tab vector of portfolio value history recalculated on candle complete
 #' \cr \code{GetOnCandleDrawDownHistory()}     \tab \code{std::vector<double>} \tab vector of portfolio drawdown history recalculated on candle complete
-#' \cr \code{GetOnDayClosePerformanceHistory()}\tab \code{Rcpp::List}          \tab data.table of daily performance history with columns \code{date, return, pnl, drawdown}
+#' \cr \code{GetOnDayClosePerformanceHistory()}\tab \code{Rcpp::List}          \tab data.table of daily performance history with columns \code{date, return, pnl, drawdown, n_per_day, avg_pnl}
 #' \cr \code{Reset()}                          \tab \code{void}                \tab resets to initial state
-#' \cr \code{SetCost( \link{Cost} cost )}      \tab \code{void}                \tab sets trading commissions cost
 #' }
-#' @section Execution model:
+#' @example /inst/examples/sma_crossover.R
+#' @section Execution Model:
 #' System sends new order and after \code{latencySend} seconds it reaches exchange.
 #' System receives confirmation of order placement \code{latencyReceive} seconds later.
 #' When execution conditions met on exchange - order is executed and system receives
@@ -84,7 +98,7 @@
 #' \cr id_sent        \tab tick id when order was sent to exchange
 #' \cr id_processed   \tab tick id when enter order execution or cancelled confirmation was received ( first tick after \code{time_processed} )
 #' \cr time_sent      \tab time when order was sent to exchange
-#' \cr time_processed \tab time when enter order execution or cancelled confirmation was received
+#' \cr time_processed \tab time when order execution or cancelled confirmation was received
 #' \cr price_init     \tab initial price
 #' \cr price_exec     \tab execution price
 #' \cr side           \tab \code{buy}/\code{sell}
@@ -93,9 +107,14 @@
 #' \cr comment        \tab comment
 #' }
 #' @section Trades:
-#' Two orders are combined into trade by trade id. The first and the second orders are called enter and exit respectively.
-#' Trade side is long if enter order is buy and short if enter order is sell
-#' Orders must be buy and sell only. Two buys or two sells not allowed. Trade can be \code{new} when order to open trade is just placed, \code{opened} when trade is not closed yet and \code{closed} when trade is flat.
+#' Two orders are combined into trade by trade id. The first and the second orders are called enter and exit respectively. \cr
+#' Trade side is long if enter order is buy and short if enter order is sell. \cr
+#' Orders must be buy and sell only. Two buys or two sells not allowed. Trade can be \cr
+#' \itemize{
+#'   \item \code{new} when order to open trade is just placed
+#'   \item \code{opened} when trade is not closed yet
+#'   \item \code{closed} when trade is flat. \cr
+#' }
 #' Trades returned as data.table with the following columns:
 #' \tabular{ll}{
 #' \cr \strong{Name} \tab \strong{Description}
@@ -149,6 +168,40 @@
 #' \cr sortino       \tab annualized Sortino ratio calulated on daily returns
 #' \cr r_squared     \tab R Squared calulated on daily PnL values
 #' \cr avg_dd        \tab average drawdown calulated on daily drawdown history
+#' }
+#' @section Options:
+#' List of following elements. All options are optional.
+#' \describe{
+#'  \item{\strong{cost}}{
+#'    list or data.table with items identical to \link{Cost} C++ class.
+#'    \cr E.g. if set to \code{ data.table( tradeAbs = -0.01, shortRel = -0.05 / 360 ) } means you pay -$0.01 per executed
+#'    order and -5\% p.a. overnight short.
+#'  }
+#'  \item{\strong{stop}}{
+#'    list or data.table with at least one item:
+#'    \describe{
+#'      \item{drawdown}{
+#'        Trading stops when drawdown exceeds set value. E.g. if set to -0.02 then when drawdown exceeds 2\% trading stops.
+#'      }
+#'      \item{loss}{
+#'        Trading stops when market value (P&L) is lower set value. E.g. if set to -0.05 then when market value (P&L) is lower than -5\% trading stops.
+#'      }
+#'      If stop rule triggered no orders sent to exchange and opened trades closed by market orders.
+#'    }
+#'  }
+#'  \item{\strong{trade_start}}{
+#'    POSIXct timestamp. All orders ignored until specified time. Useful to 'warm-up' strategy.
+#'  }
+#'  \item{\strong{latency_send, latency_receive, latency}}{
+#'    numeric value. Latency can be set by send/receive or overall. 'latency' sets send and receive latency as \code{x / 2}. See 'Execution Model' section.
+#'  }
+#'  \item{\strong{trading_hours}}{
+#'    numeric vector of length two. Sets trading hours start and end according to formula:\cr \code{hours + minutes / 60 + seconds / 3600}. \cr If set \code{onMarketOpen}, \code{onMarketClose} events are executed at corresponding times.
+#'    \cr E.g. if set to \code{c( 10.25, 17.5 )} means \code{onMarketOpen} event called every day at '10:15' and \code{onMarketClose} event called every day at '17:30'.
+#'    \cr For convenience \code{IsTradingHoursSet()} method can be used to check wether trading hours are set.
+#'
+#'  }
+#'
 #' }
 #' @name Processor
 #' @rdname cpp_Processor

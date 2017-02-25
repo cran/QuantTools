@@ -38,9 +38,9 @@ inline Rcpp::NumericVector DoubleToDateTime( double time, std::string timeZone =
 
 }
 
-inline Rcpp::NumericVector IntToDate( std::vector<int> dates ) {
+inline Rcpp::IntegerVector IntToDate( std::vector<int> dates ) {
 
-  Rcpp::NumericVector dateVector = Rcpp::wrap( dates );
+  Rcpp::IntegerVector dateVector = Rcpp::wrap( dates );
   dateVector.attr( "class" ) = Rcpp::CharacterVector::create( "Date" );
 
   return dateVector;

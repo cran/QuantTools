@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Exponential Moving Average class
-#' @description c++ class documentation
+#' @title C++ Exponential Moving Average class
+#' @description C++ class documentation
 #' @section Usage: \code{Ema( int n )}
 #' @param n indicator period
 #' @details R function \link{ema}.
-#' @family c++ indicators
-#' @family c++ classes
+#' @family C++ indicators
+#' @family C++ classes
 #'
 #' @section Public Members and Methods:
 #' \tabular{lll}{

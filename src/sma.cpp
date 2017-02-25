@@ -17,7 +17,8 @@
 
 #include "../inst/include/Indicators/Sma.h"
 
-//' @title Simple Moving Average
+//' Simple Moving Average
+//'
 //' @param x numeric vectors
 //' @param n window size
 //' @family technical indicators

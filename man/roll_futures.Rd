@@ -14,4 +14,3 @@ roll_futures(prices_by_contract, days_before_expiry)
 \description{
 Combine multiple futures market data into continuous contract
 }
-

@@ -17,7 +17,8 @@
 
 #include "../inst/include/Indicators/RollVolumeProfile.h"
 
-//' @title Rolling Volume Profile
+//' Rolling Volume Profile
+//'
 //' @name roll_volume_profile
 //' @param ticks read 'Ticks' section in \link{Processor}
 //' @param timeFrame indicator period in seconds, when to apply alpha correction

@@ -11,7 +11,7 @@ multi_heatmap(x, pars, value, col_neg = c("darkblue", "lightblue"),
 \arguments{
 \item{x}{\code{data.table} object}
 
-\item{pars}{names of parameters. Parameters combinations must be unique}
+\item{pars}{names of parameters. Parameters combinations must be unique. To specify x and y axes use \code{list( x = ..., y = ... )}.}
 
 \item{value}{name of value parameter}
 
@@ -34,4 +34,3 @@ Other graphical functions: \code{\link{add_last_values}},
   \code{\link{lines_stacked_hist}},
   \code{\link{plot_table}}, \code{\link{plot_ts}}
 }
-

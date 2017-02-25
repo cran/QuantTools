@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#' c++ Tick class
-#' @description c++ class documentation
+#' @title C++ Tick class
+#' @description C++ class documentation
 #' @section Usage: \code{Tick{ int id, double time, double price, int volume }}
 #' @param id id
 #' @param time seconds since epoch
@@ -25,5 +25,5 @@
 #' @name Tick
 #' @rdname cpp_Tick
 #' @family backtesting classes
-#' @family c++ classes
+#' @family C++ classes
 NULL

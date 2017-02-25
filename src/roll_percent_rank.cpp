@@ -17,7 +17,8 @@
 
 #include "../inst/include/Indicators/RollPercentRank.h"
 
-//' @title Rolling Percent Rank
+//' Rolling Percent Rank
+//'
 //' @name roll_percent_rank
 //' @param x numeric vector
 //' @param n window size

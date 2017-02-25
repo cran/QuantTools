@@ -34,22 +34,21 @@
 #' @param xaxt same as in \code{\link[graphics]{par}}
 #' @param t date/time vector to be converted to plot x coordinates
 #' @family graphical functions
-#'
-#' @details
-#' Plots time series each represented by columns of \code{times_series} on single plot.
+#' @details Plots time series each represented by columns of \code{times_series} on single plot. \cr
 #' As for OHLC series, only one can be plotted and should be passed as \code{times_series} with 4 columns \code{'open','high','low','close'}.
-#'
 #' @examples
 #' \donttest{
-#' time_series <- get_finam_data( 'SBER', '2014-01-10', '2014-08-13', period = '10min' )
 #'
-#' plot_ts( time_series[ time %bw% '2014-08-13', list( time, open, high, low, close ) ] )
-#' plot_ts( time_series[ time %bw% '2014-08-13', list( time, volume = volume / 1e6 )  ] , type = 'h' )
-#' plot_ts( time_series[ time %bw% '2014-08', list( time, close ) ] )
+#' data( ticks )
+#'
+#' time_series = to_candles( ticks, 60 * 10 )
+#'
+#' plot_ts( time_series[ time %bw% '2016-05-13', list( time, open, high, low, close ) ] )
+#' plot_ts( time_series[ time %bw% '2016-05-13', list( time, volume = volume / 1e6 )  ] , type = 'h' )
+#' plot_ts( time_series[ time %bw% '2016-05', list( time, close ) ] )
 #' plot_ts( time_series[ , list( time, close ) ] )
 #' }
 #' \donttest{
-#' time_series <- get_finam_data( 'SBER', '2014-01-10', '2014-08-13', period = '10min' )
 #'
 #' mar = par( 'mar' )
 #' par( mar = c( 0, 4, 0, 4 ), xaxt = 'n' )
@@ -58,14 +57,20 @@
 #'   plot_ts( time_series[ , list( time, open, high, low, close ) ] )
 #'   plot_ts( time_series[ , list( time, close ) ] )
 #'   par( xaxt = 's' )
-#'   plot_ts( time_series[ , list( time, vol = vol / 1e6 ) ], type = 'h' )
+#'   plot_ts( time_series[ , list( time, volume = volume / 1e6 ) ], type = 'h' )
 #'   empty_plot()
 #' par( mar = mar )
+#' layout( matrix(1) )
 #' }
+#'
 #'
 #' @name plot_ts
 #' @export
 plot_ts = function( dt, type = 'auto', col = 'auto', lty = par( 'lty' ), lwd = par( 'lwd' ), pch = par( 'pch' ), legend = c( 'topright', 'topleft', 'bottomright', 'bottomleft' , 'n' ), last_values = TRUE, main = '', ylim = 'auto', xlim = 'auto', time_range = 'auto', resolution = 'auto', log = par( 'ylog' ), mar = par( 'mar' ), xaxt = par( 'xaxt' ), add = par( 'new' ) ){
+
+  if( is.null( dt ) ) stop( "dt must be not NULL" )
+  if( nrow( dt ) == 0 ) stop( "dt must contain rows" )
+  if( !any( c( 'Date', 'POSIXct' ) %in% class( dt[[1]] ) ) ) stop( "dt`s first column must be Date or POSIXct" )
 
   legend <- match.arg( legend )
 
@@ -111,7 +116,7 @@ plot_ts = function( dt, type = 'auto', col = 'auto', lty = par( 'lty' ), lwd = p
                                       stacked_hist = range( rowSums( data ), na.rm = TRUE ),
                                       range( data, na.rm = TRUE )
   )
-  if( xlim[1] == 'auto' ) xlim = get( 'plot_ts_basis', envir = plot_ts_env )[, c( x_from[1] - x_step, x_to[.N] + x_step / 2 * 0 ) ]
+  if( xlim[1] == 'auto' ) xlim = get( 'plot_ts_basis', envir = plot_ts_env )[, c( x_from[1] - x_step*0, x_to[.N] + x_step / 2 * 0 ) ]
 
   if( !add ) { curr_mar = par( 'mar' ); curr_xaxt = par( 'xaxt' ); par( mar = mar, xaxt = xaxt ) }
   if( !add ) plot_ts_frame( xlim, ylim, resolution, log )
@@ -178,14 +183,21 @@ plot_ts_basis = function( times, time_range = 'auto' ){
   . = date = x_to = x_from = t_from = t_to = NULL
   if( time_range != 'auto' ){
 
+    tz = attr( times, 'tzone' )
+    if( is.null( tz ) ) tz = ''
+
     t_from = strsplit( time_range, '/' )[[1]][1]
     t_to = strsplit( time_range, '/' )[[1]][2]
     basis = basis[, .( t_from = paste( date, t_from ), t_to = paste( date, t_to ) ), by = date ]
-    basis[, ':='( t_from = as.POSIXct( t_from, tz = attr( times, 'tzone' ) ), t_to = as.POSIXct( t_to, tz = attr( times, 'tzone' ) ) ) ]
+    basis[, ':='( t_from = as.POSIXct( t_from, tz = tz ), t_to = as.POSIXct( t_to, tz = tz ) ) ]
 
   } else {
 
-    basis = basis[, .( t_from = time[1], t_to = time[.N] ), by = date ]
+    time_step = if( length( times ) > 1 ) min( diff( times ) ) else 0
+
+    basis = basis[, .( t_from = time[1] - time_step, t_to = time[.N] ), by = date ]
+
+    #if( basis[, .N == 1 && as.numeric( t_to - t_from, units = 'mins' ) < 10  ] ) basis[, t_to := t_from + as.difftime( 10, units = 'mins' ) ]
 
   }
 
@@ -215,7 +227,7 @@ plot_ts_frame = function( xlim, ylim, resolution = 'auto', log = par( 'ylog' ), 
               'minute'
 
   mins_grid = resolution == 'minute' & basis[ 1, class( t_from )[1] != 'Date' ]
-  mins_labs = resolution == 'minute' & basis[ 1, class( t_from )[1] != 'Date' ] & par( 'xaxt' ) != 'n' & period < as.difftime( 2, units = 'hours' )
+  mins_labs = resolution == 'minute' & basis[ 1, class( t_from )[1] != 'Date' ] & par( 'xaxt' ) != 'n' & period %bw% as.difftime( c( 10, 120 ), units = 'mins' )
   hour_labs = resolution == 'minute' & basis[ 1, class( t_from )[1] != 'Date' ]
   hour_grid = resolution %in% c( 'minute', 'hour' ) & basis[ 1, class( t_from )[1] != 'Date' ]
   days_labs = resolution %in% c( 'minute', 'hour', 'day' ) & par( 'xaxt' ) != 'n'
@@ -243,7 +255,7 @@ plot_ts_frame = function( xlim, ylim, resolution = 'auto', log = par( 'ylog' ), 
   axis( 2, at = ax_ticks, labels = prettyNum( ax_ticks, ' ' ), las = 1, tick = FALSE )
 
   x_d = basis[, x_from ]
-  t_d = basis[, t_from ]
+  t_d = basis[, t_to   ]
 
   id_month = !duplicated( format( t_d, '%Y-%m' ) )
   id_years = !duplicated( format( t_d, '%Y' ) )

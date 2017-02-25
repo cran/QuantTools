@@ -19,10 +19,11 @@
 #'
 #' @family graphical functions
 #' @export
-empty_plot <- function(){
+empty_plot <- function() {
+
   mar = par( 'mar' )
-  par(mar = c(0,0,0,0))
-  plot(1, type="n", axes=F, xlab="", ylab="")
+  par( mar = c( 0, 0, 0, 0 ) )
+  plot( 1, type = "n", axes = F, xlab = "", ylab = "" )
   par( mar = mar )
 
 }

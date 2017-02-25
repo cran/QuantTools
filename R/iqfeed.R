@@ -16,9 +16,8 @@
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
 #' IQFeed
-#' @title IQFeed
-#' @name iqfeed
 #'
+#' @name iqfeed
 #' @examples
 #' \donttest{
 #' symbol = 'MSFT'
@@ -33,8 +32,7 @@
 #' get_iqfeed_data( symbol, from, to )
 #' }
 #'
-#' @details
-#' Retrieves IQFeed historical market data like ticks and candles.
+#' @details Retrieves IQFeed historical market data like ticks and candles.
 #'
 #' @section Basis For Last:
 #' \tabular{ll}{
@@ -451,6 +449,25 @@ NULL
   markets = .get_iqfeed( cmd = 'SLM\r\n' )[,1:3, with = FALSE]
   setnames( markets, c( 'market_id', 'short_name', 'long_name' ) )
   markets[]
+}
+
+.get_iqfeed_security_types_info = function( ){
+  security_types = .get_iqfeed( cmd = 'SST\r\n' )[,1:3, with = FALSE]
+  setnames( security_types, c( 'type_id', 'short_name', 'long_name' ) )
+  security_types[]
+}
+
+.get_iqfeed_symbol_info = function( symbol, type_ids ){
+
+  cmd = paste0( 'SBF,s,', symbol, ',t,', paste( type_ids, collapse = ' ' ), '\r\n' )
+  info = .get_iqfeed( cmd )
+  if( is.null( info ) ) return()
+  setnames( info, c( 'symbol', 'market', 'type', 'description' ) )
+  .symbol = symbol
+  info = info[ symbol == .symbol ]
+  if( nrow( info ) == 0 ) return()
+  info[]
+
 }
 
 .get_iqfeed_trade_conditions_info = function( ){

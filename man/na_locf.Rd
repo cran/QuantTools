@@ -12,4 +12,3 @@ na_locf(x)
 \description{
 Last Observation Carried Forward
 }
-

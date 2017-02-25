@@ -2,23 +2,21 @@
 % Please edit documentation in R/plot_table.R
 \name{plot_table}
 \alias{plot_table}
-\title{Plot data.frame as table with histogram in background}
+\title{Plot data.table as table}
 \usage{
-plot_table(x, hist = "n", col = "auto", srt = 0, ...)
+plot_table(dt, transpose = F, justify = c("middle", "left", "right"), ...)
 }
 \arguments{
-\item{x}{data}
+\item{dt}{data.table}
 
-\item{hist}{histogram background type, \code{'bycol', 'total', 'n'}}
+\item{transpose}{should table be transposed?}
 
-\item{col}{only auto colors available}
-
-\item{srt}{column names rotation}
+\item{justify}{\code{'middle','left','right'}}
 
 \item{...}{further graphical parameters as in \code{\link[graphics]{par}}}
 }
 \description{
-Plot data.frame as table with histogram in background
+Plot data.table as table
 }
 \seealso{
 Other graphical functions: \code{\link{add_last_values}},
@@ -28,4 +26,3 @@ Other graphical functions: \code{\link{add_last_values}},
   \code{\link{lines_stacked_hist}},
   \code{\link{multi_heatmap}}, \code{\link{plot_ts}}
 }
-

@@ -20,8 +20,6 @@
 #' @param x numeric vector to be rounded
 #' @param interval the interval the values should be rounded towards
 #' @return A numeric vector with x rounded to the desired interval.
-#'
-#'
 #' @name iround
 #' @export
 iround <- function(x, interval){

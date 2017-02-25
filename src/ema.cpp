@@ -17,7 +17,8 @@
 
 #include "../inst/include/Indicators/Ema.h"
 
-//' @title Exponential Moving Average
+//' Exponential Moving Average
+//'
 //' @param x numeric vectors
 //' @param n window size
 //' @family technical indicators

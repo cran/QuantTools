@@ -2,14 +2,14 @@
 % Please edit documentation in R/doc_RollRange.R
 \name{RollRange}
 \alias{RollRange}
-\title{c++ Rolling Range / Quantile class}
+\title{C++ Rolling Range / Quantile class}
 \arguments{
 \item{n}{indicator period}
 
 \item{p}{probability value \code{[0, 1]}}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \details{
 R functions \link{roll_range}, \link{roll_quantile}, \link{roll_min}, \link{roll_max}.
@@ -29,11 +29,19 @@ R functions \link{roll_range}, \link{roll_quantile}, \link{roll_min}, \link{roll
 \cr \code{GetMinHistory()}        \tab \code{std::vector< double >}\tab return min history
 \cr \code{GetMaxHistory()}        \tab \code{std::vector< double >}\tab return max history
 \cr \code{GetQuantileHistory()}   \tab \code{std::vector< double >}\tab return quantile history
-\cr \code{GetHistory()}           \tab \code{DataFrame}            \tab return values history data.table with columns \code{min, max}
+\cr \code{GetHistory()}           \tab \code{List}                 \tab return values history data.table with columns \code{min, max}
 }
 }
+
 \seealso{
-Other c++ classes: \code{\link{BBands}},
+Other C++ indicators: \code{\link{BBands}},
+  \code{\link{Crossover}}, \code{\link{Ema}},
+  \code{\link{Indicator}}, \code{\link{RollLinReg}},
+  \code{\link{RollPercentRank}}, \code{\link{RollSd}},
+  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
+  \code{\link{Sma}}, \code{\link{Stochastic}}
+
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Cost}},
   \code{\link{Crossover}}, \code{\link{Ema}},
   \code{\link{Indicator}}, \code{\link{Order}},
@@ -42,12 +50,4 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
-
-Other c++ indicators: \code{\link{BBands}},
-  \code{\link{Crossover}}, \code{\link{Ema}},
-  \code{\link{Indicator}}, \code{\link{RollLinReg}},
-  \code{\link{RollPercentRank}}, \code{\link{RollSd}},
-  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
-  \code{\link{Sma}}, \code{\link{Stochastic}}
 }
-

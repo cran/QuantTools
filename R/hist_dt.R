@@ -22,7 +22,6 @@
 #' @param coeff group width in [0,1]
 #' @param main plot title
 #' @family graphical functions
-#'
 #' @export
 hist_dt = function( dt, bin_width = diff( range( dt, na.rm = TRUE ) ) / 10, coeff = 0.8, main = '' ) {
 

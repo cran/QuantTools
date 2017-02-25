@@ -2,14 +2,14 @@
 % Please edit documentation in R/doc_BBands.R
 \name{BBands}
 \alias{BBands}
-\title{c++ Bollinger Bands class}
+\title{C++ Bollinger Bands class}
 \arguments{
 \item{n}{indicator period}
 
 \item{k}{number of standard deviations}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \details{
 R function \link{bbands}.
@@ -29,11 +29,19 @@ R function \link{bbands}.
 \cr \code{GetUpperHistory()}      \tab \code{std::vector< double >}\tab return upper band history
 \cr \code{GetLowerHistory()}      \tab \code{std::vector< double >}\tab return lower history
 \cr \code{GetSmaHistory()}        \tab \code{std::vector< double >}\tab return sma history
-\cr \code{GetHistory()}           \tab \code{DataFrame}            \tab return values history data.table with columns \code{upper, lower, sma}
+\cr \code{GetHistory()}           \tab \code{List}                 \tab return values history data.table with columns \code{upper, lower, sma}
 }
 }
+
 \seealso{
-Other c++ classes: \code{\link{Candle}},
+Other C++ indicators: \code{\link{Crossover}},
+  \code{\link{Ema}}, \code{\link{Indicator}},
+  \code{\link{RollLinReg}}, \code{\link{RollPercentRank}},
+  \code{\link{RollRange}}, \code{\link{RollSd}},
+  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
+  \code{\link{Sma}}, \code{\link{Stochastic}}
+
+Other C++ classes: \code{\link{Candle}},
   \code{\link{Cost}}, \code{\link{Crossover}},
   \code{\link{Ema}}, \code{\link{Indicator}},
   \code{\link{Order}}, \code{\link{Processor}},
@@ -42,12 +50,4 @@ Other c++ classes: \code{\link{Candle}},
   \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
-
-Other c++ indicators: \code{\link{Crossover}},
-  \code{\link{Ema}}, \code{\link{Indicator}},
-  \code{\link{RollLinReg}}, \code{\link{RollPercentRank}},
-  \code{\link{RollRange}}, \code{\link{RollSd}},
-  \code{\link{RollVolumeProfile}}, \code{\link{Rsi}},
-  \code{\link{Sma}}, \code{\link{Stochastic}}
 }
-

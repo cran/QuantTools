@@ -19,7 +19,6 @@
 #'
 #' @param prices_by_contract list of data.tables with futures market data
 #' @param days_before_expiry number of dates before expiration to roll
-#'
 #' @export
 roll_futures = function( prices_by_contract, days_before_expiry ){
 

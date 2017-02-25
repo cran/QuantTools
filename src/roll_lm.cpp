@@ -17,7 +17,8 @@
 
 #include "../inst/include/Indicators/RollLinReg.h"
 
-//' @title Rolling Linear Regression
+//' Rolling Linear Regression
+//'
 //' @name roll_lm
 //' @param n window size
 //' @param x,y numeric vectors
@@ -27,7 +28,7 @@
 //' \cr Others return numeric vector
 //' @export
 // [[Rcpp::export]]
-Rcpp::DataFrame roll_lm( Rcpp::NumericVector x, Rcpp::NumericVector y, std::size_t n ) {
+Rcpp::List roll_lm( Rcpp::NumericVector x, Rcpp::NumericVector y, std::size_t n ) {
 
   RollLinReg lm( n );
 

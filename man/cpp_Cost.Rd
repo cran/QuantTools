@@ -2,7 +2,7 @@
 % Please edit documentation in R/doc_Cost.R
 \name{Cost}
 \alias{Cost}
-\title{c++ Trading Commissions class}
+\title{C++ Trading Commissions class}
 \arguments{
 \item{pointValue}{price point value ( 1 for stocks )}
 
@@ -25,7 +25,7 @@
 \item{shortRel}{relative commission/refund per short volume}
 }
 \description{
-c++ class documentation
+C++ class documentation
 }
 \section{Usage}{
  \code{Cost = \{\}}
@@ -35,12 +35,13 @@ c++ class documentation
 
 Positive value means refund, negative value means cost!
 }
+
 \seealso{
 Other backtesting classes: \code{\link{Candle}},
   \code{\link{Indicator}}, \code{\link{Order}},
   \code{\link{Processor}}, \code{\link{Tick}}
 
-Other c++ classes: \code{\link{BBands}},
+Other C++ classes: \code{\link{BBands}},
   \code{\link{Candle}}, \code{\link{Crossover}},
   \code{\link{Ema}}, \code{\link{Indicator}},
   \code{\link{Order}}, \code{\link{Processor}},
@@ -50,4 +51,3 @@ Other c++ classes: \code{\link{BBands}},
   \code{\link{Sma}}, \code{\link{Stochastic}},
   \code{\link{Tick}}
 }
-

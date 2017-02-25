@@ -56,4 +56,3 @@ plot_ts( data.table( dates, performance ), legend = 'topleft' )
 
 }
 }
-

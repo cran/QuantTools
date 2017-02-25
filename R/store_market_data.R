@@ -16,7 +16,7 @@
 # along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
 #' Store historical market data
-#' @title Store historical market data
+#'
 #' @param from,to text dates in format \code{"YYYY-mm-dd"}
 #' @param verbose show progress?
 #' @name store_market_data
