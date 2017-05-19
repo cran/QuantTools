@@ -75,7 +75,7 @@ lmerge = function( x, key, value, na.omit = T ){
   } )
   x = rbindlist( x )
   x = dcast( x, key ~ name, value.var = 'value' )
-  x = lapply( x, na_locf )
+  x = na_locf( x )
   setDT( x )
   setnames( x, 'key', key )
 

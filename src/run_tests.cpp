@@ -426,8 +426,8 @@ private:
     // confirmation received
     if( order->state != OrderState::EXECUTED )
       Rcout << "4.2 status not EXECUTED - " << processor.OrderStateString[(int)order->state] << ++errors << std::endl;
-    if( order->priceExecuted != 10 )
-      Rcout << "4.3 price executed not 10 - " << ++errors << std::endl;
+    if( order->priceExecuted != 5 )
+      Rcout << "4.3 price executed not 5 - " << ++errors << std::endl;
 
     tick.id ++;
     tick.time += 110;

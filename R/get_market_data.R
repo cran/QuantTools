@@ -74,54 +74,50 @@ NULL
   return( parts )
 
 }
+
+yahoo_downloader_env <- new.env()
+
+.get_yahoo_curl = function() {
+  curl = RCurl::getCurlHandle( cookiejar = '' )
+  html = RCurl::getURL( 'https://finance.yahoo.com/quote/AAPL', curl = curl )
+  crumb = gsub( '^.*crumb":"\\s*|".*', '', html )
+  assign( 'crumb', crumb, envir = yahoo_downloader_env )
+  assign( 'curl' , curl , envir = yahoo_downloader_env )
+}
+
+.get_yahoo_data = function( symbol, from, to, events ) {
+
+  if( is.null( yahoo_downloader_env$crumb ) ) .get_yahoo_curl()
+  url = paste0( 'https://query1.finance.yahoo.com/v7/finance/download/', symbol,
+                '?period1=', as.numeric( as.POSIXct( from ) ),
+                '&period2=', as.numeric( as.POSIXct( to ) ),
+                '&interval=1d&events=', events, '&crumb=', yahoo_downloader_env$crumb )
+  x = RCurl::getURL( url, curl = yahoo_downloader_env$curl )
+  if( x == '' | grepl( 'Not Found|Bad Request', x ) ) return( NULL )
+  if( grepl( 'Invalid cookie', x, fixed = T ) ) {
+    .get_yahoo_curl()
+    .get_yahoo_data( symbol, from, to, events )
+  }
+  x = gsub( 'null', '', x, fixed = T )
+  x = fread( x )
+  setnames( x, tolower( gsub( ' ', '_', names( x ) ) ) )
+  . = stock_splits = date = NULL
+  if( events == 'split' ) x[, stock_splits := sapply( parse( text = stock_splits ), eval ) ]
+  x[, date := as.Date( date ) ]
+  x[]
+
+}
+
 # download market data from Yahoo server
 #' @rdname get_market_data
 #' @export
 get_yahoo_data = function( symbol, from, to, split.adjusted = TRUE ) {
 
-  curr_date = format( Sys.Date() )
-  if( from > curr_date ) from = to = curr_date
-  if( to   > curr_date ) to = curr_date
+  splits = .get_yahoo_data( symbol, from, to, events = 'split' )
 
-  splits = get_yahoo_splits_and_dividends( symbol, from, to )
-  # split dates into parts
-  from = .extract_date_parts( from )
-  to = .extract_date_parts( to )
-  # construct download url
-  url = paste0(
-    'http://real-chart.finance.yahoo.com/table.csv?s=',
-    symbol,'&a=',
-    from[['m']] - 1, '&b=', from[['d']], '&c=', from[['Y']],'&d=',
-    to[['m']]  - 1, '&e=', to[['d']] ,'&f=', to[['Y']] , '&g=d&ignore=.csv'
-  )
-  # download data silently
-  options( warn = -1 )
-  dat = NULL
-  try( { dat = fread( url, showProgress = FALSE ) }, silent = T )
-  options( warn = 0 )
+  dat = .get_yahoo_data( symbol, from, to, events = 'history' )
 
-  if( is.null( dat ) ) return( dat )
-  # change names
-  setnames( dat, tolower( names( dat ) ) )
-  # change date format
-  dat[, date := as.Date( date ) ]
-  # set key for later use
-  setkey( dat, date )
-
-  if( split.adjusted ) {
-
-    . = split_date = split_coeff = event = value = open = high = low = close = NULL
-    dat[ , split_coeff := 1 ]
-
-    if( is.null( splits ) ) return( dat[] )
-
-    splits = splits[ event == 'SPLIT', .( split_date = date, split = value ) ]
-    if( nrow( splits ) == 0 ) return( dat )
-
-    splits[ , dat[ date < split_date, split_coeff := split_coeff * split ][ NULL ], by = 1:nrow( splits ) ]
-    dat[ , ':='( open = open / split_coeff, high = high / split_coeff, low = low / split_coeff, close = close / split_coeff ) ]
-
-  }
+  if( is.null( dat ) || nrow( dat ) == 0 ) return( dat )
 
   # return downloaded data
   return( dat[] )
@@ -135,33 +131,23 @@ get_yahoo_splits_and_dividends = function( symbol, from, to = from ) {
   if( from > curr_date ) from = to = curr_date
   if( to   > curr_date ) to = curr_date
 
-  # split dates into parts
-  from = .extract_date_parts( from )
-  to = .extract_date_parts( to )
-  # construct download url
-  url = paste0(
-    'http://ichart.finance.yahoo.com/x?s=',
-    symbol,'&a=',
-    from[['m']] - 1, '&b=', from[['d']], '&c=', from[['Y']],'&d=',
-    to[['m']]  - 1, '&e=', to[['d']] ,'&f=', to[['Y']] , '&g=v&y=0&z=30000'
-  )
-  # download data silently
-  options( warn = -1 )
+  data      = .get_yahoo_data( symbol, from, to, events = 'history' )
+  if( is.null( data ) ) return( NULL )
+  dividends = .get_yahoo_data( symbol, from, to, events = 'div'     )
+  splits    = .get_yahoo_data( symbol, from, to, events = 'split'   )
 
-  dat = NULL
-  try( { dat = read.delim( url, sep = ',', header = F, col.names = c( 'event', 'date', 'value' ) ); setDT( dat ) }, silent = T )
-  if( is.null( dat ) ) return( dat )
-  dat = dat[ apply( dat, 1, function( x ) !any( x == '' ) ) ]
-  value = date = NULL
+  . = event = NULL
+  splits   [, event := rep( 'split'    , .N ) ]
+  dividends[, event := rep( 'dividends', .N ) ]
 
-  dat[, value := sapply( parse( text = gsub( ':', '/', value ) ), eval ) ]
-  dat[,  date := as.Date( date, '%Y%m%d' ) ]
+  names = c( 'date', 'value', 'event' )
+  setnames( splits   , names )
+  setnames( dividends, names )
 
-  options( warn = 0 )
-  # return downloaded data
-  return( dat[] )
+  rbind( splits, dividends )[ order( date ) ]
 
 }
+
 # download market data from Google server
 #' @rdname get_market_data
 #' @export
@@ -174,7 +160,7 @@ get_google_data = function( symbol, from, to = from ){
   from = as.Date( from )
   to = as.Date( to )
 
-  url = paste0( 'http://finance.google.com/finance/historical?', 'q=', symbol,
+  url = paste0( 'https://finance.google.com/finance/historical?', 'q=', symbol,
                 '&startdate=', format( from, '%b' ), '+', format( from, '%d' ), ',+', format( from, '%Y' ),
                 '&enddate=', format( to, '%b' ), '+',format( to, '%d' ), ',+',format( to, '%Y' ), '&output=csv' )
 
@@ -207,9 +193,9 @@ get_finam_data = function( symbol, from, to = from, period = 'day', local = FALS
   # Finam host address
   host = 'export.finam.ru'
   # referer to successfully download data from Finam server
-  referer = 'http://www.finam.ru/analysis/profile041CA00007/default.asp'
+  referer = 'https://www.finam.ru/analysis/profile041CA00007/default.asp'
   # urls of Finam instruments information files
-  source_urls = c( 'http://www.finam.ru/scripts/export.js', 'http://www.finam.ru/cache/icharts/icharts.js' )
+  source_urls = c( 'https://www.finam.ru/scripts/export.js', 'https://www.finam.ru/cache/icharts/icharts.js' )
   # download available instruments info
   is_instruments_info_present_in_system = exists( 'instruments_info', envir = finam_downloader_env )
   #is_instruments_info_present_in_system = exists( 'finam_downloader_env', mode = 'environment' )
@@ -217,8 +203,8 @@ get_finam_data = function( symbol, from, to = from, period = 'day', local = FALS
     # define function to download available instruments information from Finam server
     get_finam_instruments_info = function( source_url ) {
 
-      # source_url = 'http://www.finam.ru/cache/icharts/icharts.js'
-      # source_url = 'http://www.finam.ru/scripts/export.js'
+      # source_url = 'https://www.finam.ru/cache/icharts/icharts.js'
+      # source_url = 'https://www.finam.ru/scripts/export.js'
 
       # read file from url
       con <- file( source_url, 'r', blocking = FALSE )

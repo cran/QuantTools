@@ -12,7 +12,7 @@ extern SEXP QuantTools_back_test(SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP QuantTools_bbands(SEXP, SEXP, SEXP);
 extern SEXP QuantTools_crossover(SEXP, SEXP);
 extern SEXP QuantTools_ema(SEXP, SEXP);
-extern SEXP QuantTools_na_locf(SEXP);
+extern SEXP QuantTools_na_locf_numeric(SEXP);
 extern SEXP QuantTools_roll_correlation(SEXP, SEXP, SEXP);
 extern SEXP QuantTools_roll_lm(SEXP, SEXP, SEXP);
 extern SEXP QuantTools_roll_max(SEXP, SEXP);
@@ -34,7 +34,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"QuantTools_bbands",              (DL_FUNC) &QuantTools_bbands,              3},
   {"QuantTools_crossover",           (DL_FUNC) &QuantTools_crossover,           2},
   {"QuantTools_ema",                 (DL_FUNC) &QuantTools_ema,                 2},
-  {"QuantTools_na_locf",             (DL_FUNC) &QuantTools_na_locf,             1},
+  {"QuantTools_na_locf_numeric",     (DL_FUNC) &QuantTools_na_locf_numeric,     1},
   {"QuantTools_roll_correlation",    (DL_FUNC) &QuantTools_roll_correlation,    3},
   {"QuantTools_roll_lm",             (DL_FUNC) &QuantTools_roll_lm,             3},
   {"QuantTools_roll_max",            (DL_FUNC) &QuantTools_roll_max,            2},

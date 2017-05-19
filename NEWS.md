@@ -1,3 +1,14 @@
+#### v0.5.5:
+- `na_locf` became smarter. Added support for `data.table`, `data.frame` and non numeric `vector`.
+- `dof` function updated and `dofc` added. Apply function to `data.table` excluding first column ( e.g. if first column is date or time ) column-wise or to the rest columns as to single `data.table`.
+- `bw` functionality updated. Now `/` can be used instead of `c( from, to )`. See `?bw` for examples.
+- `plot_dts` chainable `plot_ts` successor added. A little buggy but much more configurable than `plot_ts`. See examples in `?Processor`.
+- `Processor.GetCandle()` method added to retrieve current candle.
+- `Processor.AllowLimitToHitMarket()` method added to allow limit orders to be executed as market if placed at price worse than current market price.
+- `Processor` `onMarketClose` event now executed before `onMarketOpen`.
+- `Processor` Bollinger Bands example added and SMA Crossover example updated.
+- `get_yahoo_data` and `get_finam_data` fixed.
+
 #### v0.5.4:
 - `Processor` multiple options support added. You can set trading hours, latency, portfolio value stop loss and stop draw down, trading start time.
     - use `SetTradingHours( double start, double end )` method to set trading hours and `onMarketOpen()`, `onMarketClose()` events to act on trading hours `start` and `end`. Use `IsTradingHoursSet()` method to check if trading hours are set.

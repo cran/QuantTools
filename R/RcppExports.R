@@ -53,13 +53,8 @@ ema <- function(x, n) {
     .Call('QuantTools_ema', PACKAGE = 'QuantTools', x, n)
 }
 
-#' Last Observation Carried Forward
-#'
-#' @param x numeric vector to roll through
-#' @name na_locf
-#' @export
-na_locf <- function(x) {
-    .Call('QuantTools_na_locf', PACKAGE = 'QuantTools', x)
+na_locf_numeric <- function(x) {
+    .Call('QuantTools_na_locf_numeric', PACKAGE = 'QuantTools', x)
 }
 
 #' Rolling Linear Regression

@@ -48,18 +48,18 @@ ticks[ time \%bw\% '2016-05-11 10:20' ]
 ticks[ time \%bw\% '2016-05-11 10:20:53' ]
 
 # select between two months inclusive
-ticks[ time \%bw\% c( '2016-05', '2016-08' ) ]
+ticks[ time \%bw\% '2016-05/2016-08' ]
 
 # select from month begin and date
-ticks[ time \%bw\% c( '2016-05', '2016-06-23' ) ]
+ticks[ time \%bw\% '2016-05/2016-06-23' ]
 
 # select between two timestamps
-ticks[ time \%bw\% c( '2016-05-02 09:30', '2016-05-02 11:00' ) ]
+ticks[ time \%bw\% '2016-05-02 09:30/2016-05-02 11:00' ]
 # also works with incomplete timestamps
-ticks[ time \%bw\% c( '2016-05-02 09:30', '2016-05-02 11' ) ]
+ticks[ time \%bw\% '2016-05-02 09:30/2016-05-02 11' ]
 
 # select all dates but with time between 09:30 and 16:00
-ticks[ time \%bw\% c( '09:30', '16:00' ) ]
+ticks[ time \%bw\% '09:30/16:00' ]
 
 # also bw can be used as a shortcut for 'a <= x & x <= b' for non-'POSIXct' classes:
 # numeric

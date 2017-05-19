@@ -17,30 +17,51 @@
 
 #' Do calculation on data.table excluding first column
 #'
-#' @param obj data.table
-#' @param action function or text string with actions to perform
+#' @param x data.table
+#' @param fun function or text formula where x represents argument
 #' @param ... additional parameters to function if \code{action} is function
+#' @details DO Function ( Column-wise/Row-wise )
 #' @name dof
 #' @export
-dof <- function( obj, action, ... ){
-  set_columns = FALSE
-  data <- obj[ , -1, with = FALSE ]
-  if( !any( methods::is( action ) == 'function' ) ){
-    expr <- parse( text = ( paste( 'data', action ) ) )
-    data <- eval( expr )
+dof = function( x, fun, ... ) {
+
+  if( is.character( fun ) ) fun = eval( parse( text = paste( 'function( x ) {', fun, '}' ) ) )
+  if( inherits( x[[1]], c( 'Date', 'POSIXct' ) ) ) {
+
+    data.table( x[, 1], fun( x[, -1], ... ) )
+
   } else {
-    data <- action( data, ... )
-    if( methods::is( data )[1] != 'data.table' ){
-      if( ( length( data ) != nrow( obj ) ) | nrow(obj) <= 2 )  return( data )
-	  set_columns = TRUE
-	}
+
+    fun( x, ... )
 
   }
-  ret <- data.table( obj[ , 1, with = FALSE ], data )
-  new_names <- deparse( substitute( action ) )
-  if( set_columns ) setnames( ret, 2, gsub( '[\\(, ]|=.*', '', new_names ) )
-  return( ret )
+
 }
 #' @rdname dof
 #' @export
-'%dof%' <- function( obj, action ) dof( obj, action )
+dofc = function( x, fun, ... ) {
+
+  x = copy( x )
+  if( is.character( fun ) ) fun = eval( parse( text = paste( 'function( x ) {', fun, '}' ) ) )
+  # skip first column if it is date or time
+  if( inherits( x[[1]], c( 'Date', 'POSIXct' ) ) ) {
+
+    for( j in seq_along( x )[-1] ) set( x , j = j, value = fun( x[[j]], ... ) )
+
+  } else {
+
+    for( j in seq_along( x ) ) set( x , j = j, value = fun( x[[j]], ... ) )
+
+  }
+
+  return( x )
+
+}
+#' @rdname dof
+#' @export
+'%dof%' = function( x, fun ) dof( x, fun )
+#' @rdname dof
+#' @export
+'%dofc%' = function( x, fun ) dofc( x, fun )
+
+

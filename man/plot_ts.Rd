@@ -4,7 +4,7 @@
 \alias{plot_ts}
 \alias{plot_ts}
 \alias{t_to_x}
-\title{Plot time series}
+\title{Plot time series !PLEASE USE plot_dts!}
 \usage{
 plot_ts(dt, type = "auto", col = "auto", lty = par("lty"),
   lwd = par("lwd"), pch = par("pch"), legend = c("topright", "topleft",
@@ -49,7 +49,7 @@ t_to_x(t)
 \item{t}{date/time vector to be converted to plot x coordinates}
 }
 \description{
-Plot time series
+Plot time series !PLEASE USE plot_dts!
 }
 \details{
 Plots time series each represented by columns of \code{times_series} on single plot. \cr

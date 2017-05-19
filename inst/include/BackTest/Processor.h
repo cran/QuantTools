@@ -71,6 +71,7 @@ private:
   double stopTradingDrawdown = NAN;
   double stopTradingLoss     = NAN;
   bool   isTradingStopped = false;
+  bool   allowLimitToHitMarket = false;
 
   void FormCandle( const Tick& tick ) {
 
@@ -184,6 +185,9 @@ public:
     this->startTradingTime = startTradingTime;
 
   }
+  void AllowLimitToHitMarket() {
+    allowLimitToHitMarket = true;
+  }
 
   void SetOptions( Rcpp::List options ) {
 
@@ -196,6 +200,9 @@ public:
     bool hasLatencyReceive = std::find( names.begin(), names.end(), "latency_receive" ) != names.end();
     bool hasLatencySend    = std::find( names.begin(), names.end(), "latency_send"    ) != names.end();
     bool hasTradingHours   = std::find( names.begin(), names.end(), "trading_hours"   ) != names.end();
+
+    bool hasAllowLimitToHitMarket = std::find( names.begin(), names.end(), "allow_limit_to_hit_market"   ) != names.end();
+
 
     if( hasTradingHours ) {
 
@@ -216,6 +223,8 @@ public:
     if( hasLatency        ) SetLatency         ( options["latency"        ] );
     if( hasLatencyReceive ) SetLatencyReceive  ( options["latency_receive"] );
     if( hasLatencySend    ) SetLatencySend     ( options["latency_send"   ] );
+    if( hasAllowLimitToHitMarket ) if( options["allow_limit_to_hit_market" ] ) AllowLimitToHitMarket();
+
 
   }
 
@@ -227,12 +236,16 @@ public:
     if( statistics.drawDown < stopTradingDrawdown ) StopTrading();
     if( statistics.marketValue < stopTradingLoss )  StopTrading();
 
-    if( onMarketOpen  != nullptr and alarmMarketOpen .IsRinging( tick.time ) ) onMarketOpen();
     if( onMarketClose != nullptr and alarmMarketClose.IsRinging( tick.time ) ) onMarketClose();
+    if( onMarketOpen  != nullptr and alarmMarketOpen .IsRinging( tick.time ) ) onMarketOpen();
 
     FormCandle( tick );
 
     if( onTick != nullptr ) onTick( tick );
+
+    // allocate memory to prevent iterators invalidation in case some orders have callbacks which send new orders
+    auto reserve = orders.size() < 10 ? 20 : orders.size() * 2;
+    orders.reserve( reserve );
 
     for( auto it = orders.begin(); it != orders.end();  ) {
 
@@ -250,7 +263,6 @@ public:
         trade->state    = TradeState::NEW;
         trade->idSent   = order->idSent;
         trade->timeSent = order->timeSent;
-        trade->side     = order->IsBuy() ? TradeSide::LONG : TradeSide::SHORT;
         trade->cost     = cost.order;
 
         trades[ order->idTrade ] = trade;
@@ -280,6 +292,7 @@ public:
             trade->idEnter    = order->idProcessed;
             trade->timeEnter  = order->timeProcessed;
             trade->priceEnter = order->priceExecuted;
+            trade->side       = order->IsBuy() ? TradeSide::LONG : TradeSide::SHORT;
 
             trade->state = TradeState::OPENED;
 
@@ -362,6 +375,7 @@ public:
   }
 
   Statistics GetStatistics() { return statistics; }
+  Candle GetCandle() const { return candle; }
 
   void StopTrading() {
 
@@ -444,6 +458,7 @@ public:
       return;
 
     }
+    order->allowLimitToHitMarket = allowLimitToHitMarket;
 
     orders.push_back( order );
     statistics.Update( order );

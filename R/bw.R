@@ -47,18 +47,18 @@
 #' ticks[ time %bw% '2016-05-11 10:20:53' ]
 #'
 #' # select between two months inclusive
-#' ticks[ time %bw% c( '2016-05', '2016-08' ) ]
+#' ticks[ time %bw% '2016-05/2016-08' ]
 #'
 #' # select from month begin and date
-#' ticks[ time %bw% c( '2016-05', '2016-06-23' ) ]
+#' ticks[ time %bw% '2016-05/2016-06-23' ]
 #'
 #' # select between two timestamps
-#' ticks[ time %bw% c( '2016-05-02 09:30', '2016-05-02 11:00' ) ]
+#' ticks[ time %bw% '2016-05-02 09:30/2016-05-02 11:00' ]
 #' # also works with incomplete timestamps
-#' ticks[ time %bw% c( '2016-05-02 09:30', '2016-05-02 11' ) ]
+#' ticks[ time %bw% '2016-05-02 09:30/2016-05-02 11' ]
 #'
 #' # select all dates but with time between 09:30 and 16:00
-#' ticks[ time %bw% c( '09:30', '16:00' ) ]
+#' ticks[ time %bw% '09:30/16:00' ]
 #'
 #' # also bw can be used as a shortcut for 'a <= x & x <= b' for non-'POSIXct' classes:
 #' # numeric
@@ -76,90 +76,126 @@
 #' @export
 bw = function( x, interval ) {
 
-  if( is.null( interval ) ) return( rep( T, length( x ) ) )
-  len  = length( interval )
+  if( is.null( interval ) ) return( !vector( length = length( x ) ) )
+  if( is.character( interval ) ) {
 
-  if( len > 2 ) stop( "interval must be a vector of length 1 or 2" )
+    if( inherits( x, 'POSIXct' ) ) {
 
-  if( 'POSIXct' %in% class( x ) ) {
-
-    tz = attr( x, 'tzone' )
-    if( is.null( tz ) ) tz = ''
-
-    format_error = function() stop(
-      "incorrect string format. Must be
-      '%Y', '%Y-%m', '%Y-%m-%d', '%Y-%m-%d %H',
-      '%Y-%m-%d %H:%M', '%Y-%m-%d %H:%M:%OS' or
-      '%H:%M', '%H:%M:%OS' " )
-
-    interval = sapply( interval, format )
-
-    if( len == 2 & all( grepl( '^\\d{2}:\\d{2}', interval ) ) ) {
-
-      to_hours = function( text_time ) {
-
-        x = unlist( strsplit( text_time, ':' ) )
-        x = as.numeric( x )
-
-        h = sum( x / 60^( seq_along( x ) - 1 ) )
-        round( h, 6 )
-
+      if( length( interval ) == 2 ) interval = paste( interval, collapse = '/' )
+      interval = .text_to_time_interval( interval, attr( x, 'tzone' ) )
+      if( is.numeric( interval ) ) {
+        return( round( as.numeric( to_UTC( x ) ) %% ( 24 * 60 * 60 ), 6 ) %bw% interval )
       }
-      interval = c( to_hours( interval[1] ), to_hours( interval[2] ) )
-
-      return( round( ( as.numeric( to_UTC( x ) ) / ( 3600 ) ) %% 24, 6 ) %bw% interval )
-
+      return( interval[1] <= x & x < interval[2] )
 
     }
+    if( inherits( x, 'Date' ) ) {
 
-    to_time = function( text_time, upper = F ) {
-
-      if( nchar( text_time ) < 10 ) {
-
-        switch( format( nchar( text_time ) ),
-                '7' = { text_time = paste0( text_time, '-01' ); units = 'month' },
-                '4' = { text_time = paste0( text_time, '-01-01' ); units = 'years' },
-                format_error() )
-
-        time = strptime( text_time, format = '%Y-%m-%d', tz = tz )
-        if( units == 'month' ) time$mon = time$mon + upper
-        if( units == 'years' ) time$year = time$year + upper
-
-      } else {
-
-        switch( format( nchar( text_time ) ),
-                '10' = { format = '%Y-%m-%d'; units = 'days' },
-                '13' = { format = '%Y-%m-%d %H'; units = 'hours' },
-                '16' = { format = '%Y-%m-%d %H:%M'; units = 'mins' },
-                '19' = { format = '%Y-%m-%d %H:%M:%OS'; units = 'secs' },
-                format_error() )
-
-        time = strptime( text_time, format, tz = tz ) + as.difftime( upper * 1, units = units )
-
-      }
-
-      if( is.na( time ) ) format_error()
-      return( as.POSIXct( time ) )
+      if( length( interval ) == 2 ) interval = paste( interval, collapse = '/' )
+      interval = as.Date( .text_to_time_interval( interval ) )
+      return( interval[1] <= x & x < interval[2] )
 
     }
+  }
+  if( length( interval ) == 1 ) {
 
-    from = to_time( interval[1] )[1]
-    to   = to_time( interval[len], !grepl( ' ', interval[2] ) )[1]
+    if( inherits( interval, 'Date' ) ) {
 
-    if( to < from ) stop( "interval start must be lower or equal to end" )
-    return( from <= x & x < to )
+      interval[2] = interval + 1
 
-  } else {
+      if( inherits( x, 'POSIXct' ) ) {
 
-    from = interval[1]
-    to   = interval[2]
+        interval = fasttime::fastPOSIXct( interval, attr( x, 'tzone' ) )
 
-    if( len == 1 ) stop( "both interval start and end must be set" )
-    return( from <= x & x <= to )
+      }
+      return( interval[1] <= x & x < interval[2] )
+
+    }
+    stop( 'interval must contain two elements' )
 
   }
+
+  x >= interval[1] & x <= interval[2]
 
 }
 #' @name bw
 #' @export
 `%bw%` = bw
+
+.text_to_time_interval = function( x, tzone = NULL ) {
+
+  tlim = NULL
+  if( is.null( tzone ) ) tzone = 'UTC'
+  from_to = strsplit( x, split = '/', fixed = T )[[1]]
+  nchar = nchar( from_to )
+  if( nchar[1] > 12 ) {
+
+    if( length( nchar ) == 1 ) {
+      tlim = fasttime::fastPOSIXct( if( any( nchar == c( 15, 18 ) ) ) paste0( from_to, '0' ) else from_to, tz = tzone )
+      # dt
+      tlim[2] = tlim[1] +
+        if( nchar > 18 ) as.difftime( 1 , units = 'secs' ) else
+          if( nchar > 17 ) as.difftime( 10, units = 'secs' ) else
+            if( nchar > 15 ) as.difftime( 1 , units = 'mins' ) else
+              if( nchar > 14 ) as.difftime( 10, units = 'mins' ) else
+                as.difftime( 1, units = 'hours' )
+
+    } else
+      # dt/dt
+      if( nchar[2] > 12 ) tlim = fasttime::fastPOSIXct( from_to, tz = tzone ) else
+        # dt/t
+        if( nchar[2] > 1  ) tlim = fasttime::fastPOSIXct( c( from_to[1], paste( substr( from_to[1], 1, 10 ), from_to[2] ) ), tz = tzone )
+
+  }
+  if( nchar[1] < 11 ) {
+
+    if( all( nchar < 4 | ( nchar > 4 & !grepl( '-', from_to, fixed = T ) ) ) ) {
+      # t/t
+      return( .text_time_to_seconds( from_to ) )
+    }
+    # d
+    if( nchar[1] > 9 ) {
+      tlim = as.Date( from_to[1] ) + 0:1
+    } else
+      if( nchar[1] > 6 ) {
+        tlim = rep( as.POSIXlt( paste0( from_to[1], '-01' ), tz = tzone ), 2 )
+        tlim[2]$mon = tlim[2]$mon + 1
+      } else
+        if( nchar[1] > 3 ) {
+          tlim = rep( as.POSIXlt( paste0( from_to[1], '-01-01' ), tz = tzone ), 2 )
+          tlim[2]$year = tlim[2]$year + 1
+        }
+
+    if( length( nchar ) == 2 )
+      if( nchar[2] < 11 ) {
+        # d/d
+        if( nchar[2] > 9 ) {
+          tlim[2] = as.Date( from_to[2] )
+        } else
+          if( nchar[2] > 6 ) {
+            tlim[2] = as.POSIXlt( paste0( from_to[2], '-01' ), tz = tzone )
+            tlim[2]$mon = tlim[2]$mon + 1
+          } else
+            if( nchar[2] > 3 ) {
+              tlim[2] = as.POSIXlt( paste0( from_to[2], '-01-01' ), tz = tzone )
+              tlim[2]$year = tlim[2]$year + 1
+            }
+
+      }
+    if( !is.null( tlim ) ) tlim = fasttime::fastPOSIXct( tlim, tz = tzone )
+  }
+  tlim
+}
+
+.text_time_to_seconds = function( text_time ) {
+
+  h = lapply( strsplit( text_time, ':', fixed = T ), function( x ) {
+
+    sum( as.numeric( x ) / 60^( seq_along( x ) - 1 ) )
+
+  } )
+  round( unlist( h ) * 60 * 60, 6 )
+
+}
+
+

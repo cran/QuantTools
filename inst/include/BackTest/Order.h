@@ -64,6 +64,9 @@ class Order {
     int idCancel;     // tick id when cancellation sent
     int idProcessed;  // tick id when done
 
+    int idExchangeRegistered;
+    int idExchangeExecuted;
+
     double timeSent;
     double timeExchangeRegistered;
     double timeRegistered;
@@ -73,6 +76,8 @@ class Order {
     double timeExchangeCancel;
     double timeCancelled;
     double timeProcessed;
+
+    bool allowLimitToHitMarket;
 
     double priceExchangeExecuted;
 
@@ -115,6 +120,7 @@ class Order {
           if( stateExchange == OrderStateExchange::WAIT ) {
 
             stateExchange = OrderStateExchange::REGISTERED;
+            idExchangeRegistered = tick.id;
 
           }
 
@@ -151,6 +157,13 @@ class Order {
           timeExchangeExecuted = tick.time;
           timeExecuted = timeExchangeExecuted + latencyReceive;
 
+          idExchangeExecuted = tick.id;
+          if( allowLimitToHitMarket and type == OrderType::LIMIT and idExchangeExecuted == idExchangeRegistered ) {
+
+            priceExchangeExecuted = tick.price;
+
+          }
+
         }
 
       }
@@ -158,7 +171,7 @@ class Order {
 
         if( tick.time > timeExecuted ) {
           // execution confirmation received
-          idProcessed = tick.id;
+          idProcessed   = tick.id;
           timeProcessed = timeExecuted;
           priceExecuted = priceExchangeExecuted;
           if( state == OrderState::CANCELLING ) {
@@ -177,9 +190,10 @@ class Order {
 
         if( std::isnan( timeCancel ) ) {
           // cancel sent
-          timeCancel = tick.time;
+          idCancel           = tick.id;
+          timeCancel         = tick.time;
           timeExchangeCancel = timeCancel + latencySend;
-          timeCancelled = timeExchangeCancel + latencyReceive;
+          timeCancelled      = timeExchangeCancel + latencyReceive;
         }
         if( tick.time > timeExchangeCancel ) {
           // cancel request received by exchange
@@ -204,6 +218,16 @@ class Order {
     std::function< void() > onCancelled;
     std::function< void() > onRegistered;
     std::function< void() > onCancelFailed;
+
+    Order( Order& order ) {
+
+      Order( order.side, order.type, order.price, order.comment, order.idTrade );
+      onExecuted     = order.onExecuted    ;
+      onCancelled    = order.onCancelled   ;
+      onRegistered   = order.onRegistered  ;
+      onCancelFailed = order.onCancelFailed;
+
+    }
 
     Order( OrderSide side, OrderType type, double price, std::string comment, int idTrade = NA_INTEGER ):
 

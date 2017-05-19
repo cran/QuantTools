@@ -2,20 +2,29 @@
 % Please edit documentation in R/dof.R
 \name{dof}
 \alias{dof}
+\alias{dofc}
 \alias{\%dof\%}
+\alias{\%dofc\%}
 \title{Do calculation on data.table excluding first column}
 \usage{
-dof(obj, action, ...)
+dof(x, fun, ...)
 
-obj \%dof\% action
+dofc(x, fun, ...)
+
+x \%dof\% fun
+
+x \%dofc\% fun
 }
 \arguments{
-\item{obj}{data.table}
+\item{x}{data.table}
 
-\item{action}{function or text string with actions to perform}
+\item{fun}{function or text formula where x represents argument}
 
 \item{...}{additional parameters to function if \code{action} is function}
 }
 \description{
 Do calculation on data.table excluding first column
+}
+\details{
+DO Function ( Column-wise/Row-wise )
 }

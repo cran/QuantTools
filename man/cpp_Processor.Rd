@@ -36,11 +36,13 @@ C++ class documentation
 \cr \code{SetLatency( double x )}           \tab \code{void}                \tab see 'latency' in 'Options' section
 \cr \code{SetTradingHours( double start, double end )}
                                             \tab \code{void}                \tab see 'trading_hours' in 'Options' section
+\cr \code{AllowLimitToHitMarket()}          \tab \code{void}                \tab see 'allow_limit_to_hit_market' in 'Options' section
 \cr \code{SetOptions( Rcpp::List options )} \tab \code{void}                \tab see 'Options' section
 \cr \code{StopTrading()}                    \tab \code{void}                \tab if called trading stop triggered. See 'stop' in 'Options' section
 \cr \code{CanTrade()}                       \tab \code{bool}                \tab check if trading not stopped
 \cr \code{IsTradingHoursSet()}              \tab \code{bool}                \tab check if trading hours set
 \cr \code{CancelOrders()}                   \tab \code{void}                \tab cancel active orders
+\cr \code{GetCandle()}                      \tab \code{Candle}              \tab get current candle
 \cr \code{GetPosition()}                    \tab \code{int}                 \tab total executed position, positive means long, negative means short
 \cr \code{GetPositionPlanned()}             \tab \code{int}                 \tab total number of orders processing ( not executed or cancelled yet )
 \cr \code{GetMarketValue()}                 \tab \code{double}              \tab total portfolio percent value ( initial value is 0 )
@@ -214,56 +216,120 @@ List of following elements. All options are optional.
    \cr For convenience \code{IsTradingHoursSet()} method can be used to check wether trading hours are set.
 
  }
+ \item{\strong{allow_limit_to_hit_market}}{
+   if TRUE, limit order execution price set to market price if executed on same tick as registered.
+ }
 
 }
 }
 
 \examples{
-\dontrun{
+\donttest{
+
+######################################
+## Simple Moving Averages Crossover ##
+######################################
 
 # load tick data
 data( 'ticks' )
+
 # define strategy
 strategy_source = system.file( package = 'QuantTools', 'examples/sma_crossover.cpp' )
 # compile strategy
+Sys.setenv( 'USE_CXX11' = 'yes' ) # https://github.com/RcppCore/Rcpp/issues/683
 Rcpp::sourceCpp( strategy_source )
+
 # set strategy parameters
 parameters = data.table(
   period_fast = 50,
   period_slow = 30,
   timeframe   = 60
 )
+
 # set options, see 'Options' section
 options = list(
-  cost = list( tradeAbs = -0.01 ),
-  latency = 0.1
+  cost    = list( tradeAbs = -0.01 ),
+  latency = 0.1 # 100 milliseconds
 )
+
 # run test
-test_summary = sma_crossover( ticks, parameters, options, fast = T )
+test_summary = sma_crossover( ticks, parameters, options, fast = TRUE )
 print( test_summary )
-# run test on single date
-interval = '2016-09-08'
-test = sma_crossover( ticks[ time \%bw\% '2016-09-08' ], parameters, options, fast = F )
+
+# run test
+test = sma_crossover( ticks, parameters, options, fast = FALSE )
+
 # plot result
-# leave only closed trades and executed orders
-test$trades = test$trades[ state == 'closed' ]
-test$orders = test$orders[ state == 'executed' ]
+indicators = plot_dts(
+test$indicators,
+test$orders[ side == 'buy' , .( time_processed, buy  = price_exec ) ],
+test$orders[ side == 'sell', .( time_processed, sell = price_exec ) ] )$
+lines( c( 'sma_fast', 'sma_slow' ) )$
+lines( c( 'buy', 'sell' ), type = 'p', pch = c( 24, 25 ), col = c( 'blue', 'red' ) )
 
-layout( matrix( 1:2, ncol = 1 ), height = c( 2, 1 ) )
+performance = plot_dts( test$indicators[, .( time, pnl = pnl * 100, drawdown = drawdown * 100 ) ] )$
+lines( c( 'pnl', 'drawdown' ), c( '\% pnl', '\% drawdown' ), col = c( 'darkolivegreen', 'darkred' ) )
 
-par( mar = c( 0, 4, 2, 4 ), family = 'sans' )
-par( xaxt = 'n' )
-plot_ts( test$indicators[ time \%bw\% interval ], type = 'candle' )
-plot_ts( test$indicators[ ,.( time, sma_slow, sma_fast ) ],
-         col = c( 'goldenrod', 'darkmagenta' ), legend = 'topleft', add = T )
-test$orders[, points( t_to_x( time_processed ), price_exec,
-                     pch = ifelse( side == 'buy', 24, 25 ),
-                     col = ifelse( side == 'buy', 'blue', 'red' ) )
-]
-par( xaxt = 's', mar = c( 4, 4, 0, 4 ) )
-plot_ts( test$indicators[, .( time, `P&L, \%` = pnl * 100, `Draw Down, \%` = drawdown * 100 ) ],
-         col = c( 'blue', 'red' ), legend = 'bottomleft' )
+interval = '2016-01-19 12/13'
+par( mfrow = c( 2, 1 ), oma = c( 5, 4, 2, 4 ) + 0.1, mar = c( 0, 0, 0, 0 ) )
+indicators $limits( tlim = interval )$style( time = list( visible = FALSE ) )
+performance$limits( tlim = interval )
+title( 'Simple Moving Averages Crossover', outer = TRUE )
+par( mfrow = c( 1, 1 ), oma = c( 0, 0, 0, 0 ), mar = c( 5, 4, 4, 2 ) + 0.1 )
 
+}
+\donttest{
+
+#####################
+## Bollinger Bands ##
+#####################
+
+# load tick data
+data( 'ticks' )
+
+# define strategy
+strategy_source = system.file( package = 'QuantTools', 'examples/bbands.cpp' )
+# compile strategy
+Sys.setenv( 'USE_CXX11' = 'yes' ) # https://github.com/RcppCore/Rcpp/issues/683
+Rcpp::sourceCpp( strategy_source )
+
+# set strategy parameters
+parameters = data.table(
+  n         = 100,
+  k         = 0.5,
+  timeframe = 60
+)
+
+# set options, see 'Options' section
+options = list(
+  cost    = list( tradeAbs = -0.01 ),
+  latency = 0.1 # 100 milliseconds
+)
+
+# run test
+test_summary = bbands( ticks, parameters, options, fast = TRUE )
+print( test_summary )
+
+# run test
+test = bbands( ticks, parameters, options, fast = FALSE )
+
+# plot result
+indicators = plot_dts(
+test$indicators,
+test$orders[ side == 'buy' , .( time_processed, buy  = price_exec ) ],
+test$orders[ side == 'sell', .( time_processed, sell = price_exec ) ] )$
+lines( c( 'lower', 'sma', 'upper' ) )$
+lines( c( 'buy', 'sell' ), type = 'p', pch = c( 24, 25 ), col = c( 'blue', 'red' ) )
+
+performance = plot_dts( test$indicators[, .( time, pnl = pnl * 100, drawdown = drawdown * 100 ) ] )$
+lines( c( 'pnl', 'drawdown' ), c( '\% pnl', '\% drawdown' ), col = c( 'darkolivegreen', 'darkred' ) )
+
+interval = '2016-01-19 12/13'
+par( mfrow = c( 2, 1 ), oma = c( 5, 4, 2, 4 ) + 0.1, mar = c( 0, 0, 0, 0 ) )
+indicators $limits( tlim = interval )$style( time = list( visible = FALSE ) )
+performance$limits( tlim = interval )
+title( 'Bollinger Bands', outer = TRUE )
+par( mfrow = c( 1, 1 ), oma = c( 0, 0, 0, 0 ), mar = c( 5, 4, 4, 2 ) + 0.1 )
 
 }
 }

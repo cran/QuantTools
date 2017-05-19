@@ -57,14 +57,14 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// na_locf
-Rcpp::NumericVector na_locf(Rcpp::NumericVector x);
-RcppExport SEXP QuantTools_na_locf(SEXP xSEXP) {
+// na_locf_numeric
+Rcpp::NumericVector na_locf_numeric(Rcpp::NumericVector x);
+RcppExport SEXP QuantTools_na_locf_numeric(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(na_locf(x));
+    rcpp_result_gen = Rcpp::wrap(na_locf_numeric(x));
     return rcpp_result_gen;
 END_RCPP
 }

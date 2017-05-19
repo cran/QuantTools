@@ -1,23 +1,23 @@
 \donttest{
 
-######################################
-## Simple Moving Averages Crossover ##
-######################################
+#####################
+## Bollinger Bands ##
+#####################
 
 # load tick data
 data( 'ticks' )
 
 # define strategy
-strategy_source = system.file( package = 'QuantTools', 'examples/sma_crossover.cpp' )
+strategy_source = system.file( package = 'QuantTools', 'examples/bbands.cpp' )
 # compile strategy
 Sys.setenv( 'USE_CXX11' = 'yes' ) # https://github.com/RcppCore/Rcpp/issues/683
 Rcpp::sourceCpp( strategy_source )
 
 # set strategy parameters
 parameters = data.table(
-  period_fast = 50,
-  period_slow = 30,
-  timeframe   = 60
+  n         = 100,
+  k         = 0.5,
+  timeframe = 60
 )
 
 # set options, see 'Options' section
@@ -27,18 +27,18 @@ options = list(
 )
 
 # run test
-test_summary = sma_crossover( ticks, parameters, options, fast = TRUE )
+test_summary = bbands( ticks, parameters, options, fast = TRUE )
 print( test_summary )
 
 # run test
-test = sma_crossover( ticks, parameters, options, fast = FALSE )
+test = bbands( ticks, parameters, options, fast = FALSE )
 
 # plot result
 indicators = plot_dts(
 test$indicators,
 test$orders[ side == 'buy' , .( time_processed, buy  = price_exec ) ],
 test$orders[ side == 'sell', .( time_processed, sell = price_exec ) ] )$
-lines( c( 'sma_fast', 'sma_slow' ) )$
+lines( c( 'lower', 'sma', 'upper' ) )$
 lines( c( 'buy', 'sell' ), type = 'p', pch = c( 24, 25 ), col = c( 'blue', 'red' ) )
 
 performance = plot_dts( test$indicators[, .( time, pnl = pnl * 100, drawdown = drawdown * 100 ) ] )$
@@ -48,7 +48,7 @@ interval = '2016-01-19 12/13'
 par( mfrow = c( 2, 1 ), oma = c( 5, 4, 2, 4 ) + 0.1, mar = c( 0, 0, 0, 0 ) )
 indicators $limits( tlim = interval )$style( time = list( visible = FALSE ) )
 performance$limits( tlim = interval )
-title( 'Simple Moving Averages Crossover', outer = TRUE )
+title( 'Bollinger Bands', outer = TRUE )
 par( mfrow = c( 1, 1 ), oma = c( 0, 0, 0, 0 ), mar = c( 5, 4, 4, 2 ) + 0.1 )
 
 }

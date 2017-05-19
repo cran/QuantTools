@@ -4,16 +4,16 @@
 #include "BackTest.h"
 
 // [[Rcpp::export]]
-Rcpp::List sma_crossover(
+Rcpp::List bbands(
     Rcpp::DataFrame ticks,
     Rcpp::List parameters,
     Rcpp::List options,
     bool fast = false
   ) {
 
-  int    fastPeriod = parameters["period_fast" ];
-  int    slowPeriod = parameters["period_slow" ];
-  int    timeFrame  = parameters["timeframe"   ];
+  int    n          = parameters["n"         ];
+  double k          = parameters["k"         ];
+  int    timeFrame  = parameters["timeframe" ];
 
   // define strategy states
   enum class ProcessingState{ LONG, FLAT, SHORT };
@@ -21,9 +21,7 @@ Rcpp::List sma_crossover(
   int idTrade = 1;
 
   // initialize indicators
-  Sma smaFast( fastPeriod );
-  Sma smaSlow( slowPeriod );
-  Crossover crossover;
+  BBands bbands( n, k );
 
   // initialize Processor
   Processor bt( timeFrame );
@@ -59,58 +57,57 @@ Rcpp::List sma_crossover(
   bt.onCandle = [&]( Candle candle ) {
 
     // add values to indicators
-    smaSlow.Add( candle.close );
-    smaFast.Add( candle.close );
+    bbands.Add( candle.close );
 
-    // if moving averages not formed yet do nothing
-    if( not smaFast.IsFormed() or not smaSlow.IsFormed() ) return;
+  };
 
-    // update crossover
-    crossover.Add( std::pair< double, double >( smaFast.GetValue(), smaSlow.GetValue() ) );
+  // define what to do when new tick arrived
+  bt.onTick = [&]( Tick tick ) {
+
+    // if bbands not formed yet do nothing
+    if( not bbands.IsFormed() ) return;
 
     if( not bt.CanTrade()  ) return;
     if( not isTradingHours ) return;
 
-    // if smaFast is above smaSlow and current state is not long
-    if( crossover.IsAbove() and state != ProcessingState::LONG ) {
-      // if strategy has no position then buy
-      if( state == ProcessingState::FLAT ) {
+    // if strategy has no position
+    if( state == ProcessingState::FLAT) {
+      // if price below lower band then buy
+      if( tick.price < bbands.GetValue().lower ) {
+
         bt.SendOrder(
           new Order( OrderSide::BUY, OrderType::MARKET, NA_REAL, "long", idTrade )
         );
-      }
-      // if strategy has short position then close short position and open long position
-      if( state == ProcessingState::SHORT ) {
-        bt.SendOrder(
-          new Order( OrderSide::BUY, OrderType::MARKET, NA_REAL, "close short", idTrade++ )
-        );
-        bt.SendOrder(
-          new Order( OrderSide::BUY, OrderType::MARKET, NA_REAL, "reverse short", idTrade )
-        );
-      }
-      // set state to long
-      state = ProcessingState::LONG;
+        state = ProcessingState::LONG;
 
-    }
-    // if smaFast is below smaSlow and current state is not short
-    if( crossover.IsBelow() and state != ProcessingState::SHORT ) {
-      // if strategy has no position then sell
-      if( state == ProcessingState::FLAT ) {
+      }
+      // if price above apper band then sell
+      if( tick.price > bbands.GetValue().upper ) {
+
         bt.SendOrder(
           new Order( OrderSide::SELL, OrderType::MARKET, NA_REAL, "short", idTrade )
         );
+        state = ProcessingState::SHORT;
+
       }
-      // if strategy has long position then close long position and open short position
-      if( state == ProcessingState::LONG ) {
-        bt.SendOrder(
-          new Order( OrderSide::SELL, OrderType::MARKET, NA_REAL, "close long", idTrade++ )
-        );
-        bt.SendOrder(
-          new Order( OrderSide::SELL, OrderType::MARKET, NA_REAL, "reverse long", idTrade )
-        );
-      }
-      // set state to short
-      state = ProcessingState::SHORT;
+
+    }
+    // if strategy is long and price goes above sma then close long
+    if( state == ProcessingState::LONG and tick.price > bbands.GetValue().sma ) {
+
+      bt.SendOrder(
+        new Order( OrderSide::SELL, OrderType::MARKET, NA_REAL, "close long", idTrade++ )
+      );
+      state = ProcessingState::FLAT;
+
+    }
+    // if strategy is below and price goes below sma then close long
+    if( state == ProcessingState::SHORT and tick.price < bbands.GetValue().sma ) {
+
+      bt.SendOrder(
+        new Order( OrderSide::BUY, OrderType::MARKET, NA_REAL, "close short", idTrade++ )
+      );
+      state = ProcessingState::FLAT;
 
     }
 
@@ -128,8 +125,7 @@ Rcpp::List sma_crossover(
   // combine candles and indicators history
   Rcpp::List indicators = ListBuilder().AsDataTable()
     .Add( bt.GetCandles()                                )
-    .Add( "sma_slow", smaSlow.GetHistory()               )
-    .Add( "sma_fast", smaFast.GetHistory()               )
+    .Add( bbands.GetHistory()                            )
     .Add( "pnl"     , bt.GetOnCandleMarketValueHistory() )
     .Add( "drawdown", bt.GetOnCandleDrawDownHistory()    );
 

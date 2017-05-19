@@ -18,14 +18,8 @@
 #include <Rcpp.h>
 
 // [[Rcpp::plugins(cpp11)]]
-
-//' Last Observation Carried Forward
-//'
-//' @param x numeric vector to roll through
-//' @name na_locf
-//' @export
 //[[Rcpp::export]]
-Rcpp::NumericVector na_locf( Rcpp::NumericVector x ) {
+Rcpp::NumericVector na_locf_numeric( Rcpp::NumericVector x ) {
 
   double *p = x.begin(), *end = x.end() ;
   double v = *p ; p++ ;

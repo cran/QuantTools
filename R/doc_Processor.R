@@ -43,11 +43,13 @@
 #' \cr \code{SetLatency( double x )}           \tab \code{void}                \tab see 'latency' in 'Options' section
 #' \cr \code{SetTradingHours( double start, double end )}
 #'                                             \tab \code{void}                \tab see 'trading_hours' in 'Options' section
+#' \cr \code{AllowLimitToHitMarket()}          \tab \code{void}                \tab see 'allow_limit_to_hit_market' in 'Options' section
 #' \cr \code{SetOptions( Rcpp::List options )} \tab \code{void}                \tab see 'Options' section
 #' \cr \code{StopTrading()}                    \tab \code{void}                \tab if called trading stop triggered. See 'stop' in 'Options' section
 #' \cr \code{CanTrade()}                       \tab \code{bool}                \tab check if trading not stopped
 #' \cr \code{IsTradingHoursSet()}              \tab \code{bool}                \tab check if trading hours set
 #' \cr \code{CancelOrders()}                   \tab \code{void}                \tab cancel active orders
+#' \cr \code{GetCandle()}                      \tab \code{Candle}              \tab get current candle
 #' \cr \code{GetPosition()}                    \tab \code{int}                 \tab total executed position, positive means long, negative means short
 #' \cr \code{GetPositionPlanned()}             \tab \code{int}                 \tab total number of orders processing ( not executed or cancelled yet )
 #' \cr \code{GetMarketValue()}                 \tab \code{double}              \tab total portfolio percent value ( initial value is 0 )
@@ -61,6 +63,7 @@
 #' \cr \code{Reset()}                          \tab \code{void}                \tab resets to initial state
 #' }
 #' @example /inst/examples/sma_crossover.R
+#' @example /inst/examples/bbands.R
 #' @section Execution Model:
 #' System sends new order and after \code{latencySend} seconds it reaches exchange.
 #' System receives confirmation of order placement \code{latencyReceive} seconds later.
@@ -200,6 +203,9 @@
 #'    \cr E.g. if set to \code{c( 10.25, 17.5 )} means \code{onMarketOpen} event called every day at '10:15' and \code{onMarketClose} event called every day at '17:30'.
 #'    \cr For convenience \code{IsTradingHoursSet()} method can be used to check wether trading hours are set.
 #'
+#'  }
+#'  \item{\strong{allow_limit_to_hit_market}}{
+#'    if TRUE, limit order execution price set to market price if executed on same tick as registered.
 #'  }
 #'
 #' }
