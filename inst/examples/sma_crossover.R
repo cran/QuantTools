@@ -10,7 +10,6 @@ data( 'ticks' )
 # define strategy
 strategy_source = system.file( package = 'QuantTools', 'examples/sma_crossover.cpp' )
 # compile strategy
-Sys.setenv( 'USE_CXX11' = 'yes' ) # https://github.com/RcppCore/Rcpp/issues/683
 Rcpp::sourceCpp( strategy_source )
 
 # set strategy parameters

@@ -15,21 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef TICK_H
-#define TICK_H
+#ifndef UTILS_H
+#define UTILS_H
 
-class Tick {
+// https://stackoverflow.com/questions/824118/why-is-floor-so-slow
+inline int fastFloor(double x)
+{
+    return ( int ) x - ( x < ( int ) x );
+}
 
-public:
+inline int fastCeiling( double x )
+{
+    return ( int ) x + ( x > ( int ) x );
+}
 
-  int    id;
-  double time;
-  double price;
-  int    volume;
-  double bid    = 0.   ;
-  double ask    = 0.   ;
-  bool   system = false;
-
-};
-
-#endif //TICK_H
+#endif //UTILS_H

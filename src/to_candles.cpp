@@ -54,7 +54,11 @@ Rcpp::List to_candles( Rcpp::DataFrame ticks, int timeframe ) {
 
   for( int id = 0; id < times.size(); id++ ) {
 
-    Tick tick = { (int)id, times[id], prices[id], volumes[id] };
+    Tick tick;
+    tick.id = (int)id;
+    tick.time = times[id];
+    tick.price = prices[id];
+    tick.volume =  volumes[id];
 
     bool startOver = candleProcessing.time != floor( tick.time / timeframe ) * timeframe + timeframe;
 

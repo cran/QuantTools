@@ -105,6 +105,10 @@ private:
   double sumRR;
   double tdv;
 
+  ExecutionType executionType;
+  double bid;
+  double ask;
+
 public:
 
   int nTradingDaysInYear = 252;
@@ -335,7 +339,20 @@ public:
 
     }
 
-    marketValue = totalPnl + position * ( tick.price / positionValue - 1 );
+    if( not tick.system ) {
+
+      if( executionType == ExecutionType::TRADE ) {
+
+        marketValue = totalPnl + position * ( tick.price / positionValue - 1 );
+
+      }
+      if( executionType == ExecutionType::BBO ) {
+
+        marketValue = totalPnl + position * ( ( position > 0 ? bid : ask ) / positionValue - 1 );
+
+      }
+
+    }
 
     if( marketValueMax < marketValue ) marketValueMax = marketValue;
 
@@ -381,6 +398,13 @@ public:
     testEnd = tick.time;
 
     nTradesPerDay = nTradesTotal * 1.0 / nDaysTraded;
+
+    if( executionType == ExecutionType::BBO and not tick.system ) {
+
+      bid = tick.bid;
+      ask = tick.ask;
+
+    }
 
   }
 

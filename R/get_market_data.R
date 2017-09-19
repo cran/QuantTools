@@ -180,7 +180,7 @@ get_finam_data = function( symbol, from, to = from, period = 'day', local = FALS
 
     if( period != 'tick' ) stop( 'only ticks supported in local storage' )
 
-    data = .get_local_data(  symbol, from, to, source = 'finam' )
+    data = .get_local_data(  symbol, from, to, source = 'finam', period )
 
     return( data )
 

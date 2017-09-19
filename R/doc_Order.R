@@ -40,6 +40,9 @@
 #' \cr \code{isMarket?}          \tab \code{bool}          \tab market order?
 #' \cr \code{GetTradeId()}       \tab \code{int}           \tab trade id for grouping multiple orders into trades
 #' \cr \code{GetExecutionPrice()}\tab \code{double}        \tab execution price, price for limit order and market price for market order
+#' \cr \code{GetExecutionTime()} \tab \code{double}        \tab execution time
+#' \cr \code{GetProcessedTime()} \tab \code{double}        \tab processed time
+#' \cr \code{GetState()}         \tab \code{OrderState}    \tab order state
 #' \cr \code{comment}            \tab \code{std::string}   \tab arbitrary comment, useful to identify order when analyzing backtest results
 #' \cr \code{onExecuted}         \tab \code{std::function} \tab called when execution confirmation received from exchange
 #' \cr \code{onCancelled}        \tab \code{std::function} \tab called when cancellation confirmation received from exchange

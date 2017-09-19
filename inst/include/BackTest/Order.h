@@ -22,6 +22,8 @@
 #include "Tick.h"
 #include <vector>
 
+enum class ExecutionType: int { TRADE, BBO };
+
 enum class OrderSide: int { BUY, SELL };
 
 enum class OrderType: int { MARKET, LIMIT };
@@ -81,6 +83,10 @@ class Order {
 
     double priceExchangeExecuted;
 
+    ExecutionType executionType = ExecutionType::TRADE;
+    double bid;
+    double ask;
+
     void Update( Tick tick, double latencySend, double latencyReceive ) {
 
       if( state == OrderState::CANCELLED or state == OrderState::EXECUTED ) {
@@ -137,17 +143,39 @@ class Order {
         // market order executed on same tick as registerred
         if( type == OrderType::MARKET ) {
 
-          stateExchange = OrderStateExchange::EXECUTED;
-          priceExchangeExecuted = tick.price;
+          if( executionType == ExecutionType::TRADE and not tick.system ) {
+
+            stateExchange = OrderStateExchange::EXECUTED;
+            priceExchangeExecuted = tick.price;
+
+          }
+          if( executionType == ExecutionType::BBO ) {
+
+            stateExchange = OrderStateExchange::EXECUTED;
+            priceExchangeExecuted = side == OrderSide::BUY ? ask : bid;
+
+          }
 
         }
         // limit order
         if( type == OrderType::LIMIT ) {
 
-          if( ( side == OrderSide::BUY and tick.price < price ) or ( side == OrderSide::SELL and tick.price > price ) ) {
-            // when price below long or above short order is executed
-            stateExchange = OrderStateExchange::EXECUTED;
-            priceExchangeExecuted = price;
+          if( executionType == ExecutionType::TRADE and not tick.system ) {
+            if( ( side == OrderSide::BUY and tick.price < price ) or ( side == OrderSide::SELL and tick.price > price ) ) {
+              // when price below long or above short order is executed
+              stateExchange = OrderStateExchange::EXECUTED;
+              priceExchangeExecuted = price;
+
+            }
+          }
+          if( executionType == ExecutionType::BBO ) {
+            if( ( side == OrderSide::BUY and ask <= price ) or ( side == OrderSide::SELL and bid >= price ) ) {
+              // when ask below long or bid above short order is executed
+              stateExchange = OrderStateExchange::EXECUTED;
+              priceExchangeExecuted = price;
+
+            }
+
 
           }
 
@@ -160,7 +188,12 @@ class Order {
           idExchangeExecuted = tick.id;
           if( allowLimitToHitMarket and type == OrderType::LIMIT and idExchangeExecuted == idExchangeRegistered ) {
 
-            priceExchangeExecuted = tick.price;
+            if( executionType == ExecutionType::TRADE and not tick.system ) {
+              priceExchangeExecuted = tick.price;
+            }
+            if( executionType == ExecutionType::BBO ) {
+              priceExchangeExecuted = side == OrderSide::BUY ? ask : bid;
+            }
 
           }
 
@@ -206,6 +239,12 @@ class Order {
           timeProcessed = timeCancelled;
           if( onCancelled != nullptr ) onCancelled();
         }
+
+      }
+      if( executionType == ExecutionType::BBO and not tick.system ) {
+
+        bid = tick.bid;
+        ask = tick.ask;
 
       }
 
@@ -276,6 +315,9 @@ class Order {
     bool IsLimit() { return type == OrderType::LIMIT; }
     bool IsMarket() { return type == OrderType::MARKET; }
     double GetExecutionPrice() { return priceExecuted; }
+    double GetExecutionTime() { return timeExecuted; }
+    double GetProcessedTime() { return timeProcessed; }
+    OrderState GetState() { return state; }
     int GetTradeId() { return idTrade; }
 
 

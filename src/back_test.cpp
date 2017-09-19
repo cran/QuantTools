@@ -115,6 +115,8 @@ Rcpp::List back_test( Rcpp::LogicalVector enter, Rcpp::LogicalVector exit, Rcpp:
   enters = enters[ enters > 0 ];
   exits = exits[ exits > 0 ];
 
+  Rcpp::IntegerVector sideV( enters.size(), side );
+
   Rcpp::List output = ListBuilder().AsDataTable()
     .Add( "price_enter", enters   )
     .Add( "price_exit" , exits    )
@@ -123,7 +125,7 @@ Rcpp::List back_test( Rcpp::LogicalVector enter, Rcpp::LogicalVector exit, Rcpp:
     .Add( "id_enter"   , id_enter )
     .Add( "id_exit"    , id_exit  )
     .Add( "pnl_trade"  , pnls     )
-    .Add( "side"       , side     );
+    .Add( "side"       , sideV    );
 
   return output;
 

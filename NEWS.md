@@ -1,3 +1,18 @@
+#### v0.5.6:
+- `Processor` multiple options support added. You can set execution type, price step and act on time intervals. See help `?Processor` for details.
+    - use `intervals` to set intervals and `onIntervalOpen()` and `onIntervalClose()` to act on interval open and close. 
+    - use `price_step` to automatically round order price to this value before placing orders. 
+    - use `execution_type` to choose between `bbo` and `trade` (default) execution types.
+- `Processor` `mtm` and `mtm_rel` mark to market values added to trades and updated on every tick.
+- `Processor` Bollinger Bands Market Maker example added. See examples in `?Processor`.
+- `Order` `GetExecutionTime()`, `GetProcessedTime()`, `GetState()` methods added.
+- `multi_heatmap` unsorted input values support added.
+- `get_finam_data` local storage error fixed.
+- `get_iqfeed_data` irrelevant warnings fixed.
+- `bw` closed interval fixed for `Date`s.
+- `plot_dts` single value plotting fixed.
+- `back_test` `side` fixed.
+
 #### v0.5.5:
 - `na_locf` became smarter. Added support for `data.table`, `data.frame` and non numeric `vector`.
 - `dof` function updated and `dofc` added. Apply function to `data.table` excluding first column ( e.g. if first column is date or time ) column-wise or to the rest columns as to single `data.table`.

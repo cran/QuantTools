@@ -13,7 +13,7 @@
 #' @return trades data.table with columns \code{ price_enter,price_exit,mtm_min,mtm_max,id_enter,id_exit,pnl_trade,side}
 #' @export
 back_test <- function(enter, exit, price, stop_loss = -1000, side = 1L) {
-    .Call('QuantTools_back_test', PACKAGE = 'QuantTools', enter, exit, price, stop_loss, side)
+    .Call(`_QuantTools_back_test`, enter, exit, price, stop_loss, side)
 }
 
 #' Bollinger Bands
@@ -28,7 +28,7 @@ back_test <- function(enter, exit, price, stop_loss = -1000, side = 1L) {
 #' @description Bollinger bands is a mix of Rolling Range and SMA indicators. It shows the average price and its range over n past values based on price volatility.
 #' @export
 bbands <- function(x, n, k) {
-    .Call('QuantTools_bbands', PACKAGE = 'QuantTools', x, n, k)
+    .Call(`_QuantTools_bbands`, x, n, k)
 }
 
 #' Crossover
@@ -39,7 +39,7 @@ bbands <- function(x, n, k) {
 #' @description Crossover is binary indicator indicating the moment when one value goes above or below another.
 #' @export
 crossover <- function(x, y) {
-    .Call('QuantTools_crossover', PACKAGE = 'QuantTools', x, y)
+    .Call(`_QuantTools_crossover`, x, y)
 }
 
 #' Exponential Moving Average
@@ -50,11 +50,11 @@ crossover <- function(x, y) {
 #' @description Exponentially weighted moving average aka EMA is exponentially weighted SMA. EMAs have faster response to recent value changes than SMAs.
 #' @export
 ema <- function(x, n) {
-    .Call('QuantTools_ema', PACKAGE = 'QuantTools', x, n)
+    .Call(`_QuantTools_ema`, x, n)
 }
 
 na_locf_numeric <- function(x) {
-    .Call('QuantTools_na_locf_numeric', PACKAGE = 'QuantTools', x)
+    .Call(`_QuantTools_na_locf_numeric`, x)
 }
 
 #' Rolling Linear Regression
@@ -68,13 +68,13 @@ na_locf_numeric <- function(x) {
 #' \cr Others return numeric vector
 #' @export
 roll_lm <- function(x, y, n) {
-    .Call('QuantTools_roll_lm', PACKAGE = 'QuantTools', x, y, n)
+    .Call(`_QuantTools_roll_lm`, x, y, n)
 }
 
 #' @rdname roll_lm
 #' @export
 roll_correlation <- function(x, y, n) {
-    .Call('QuantTools_roll_correlation', PACKAGE = 'QuantTools', x, y, n)
+    .Call(`_QuantTools_roll_correlation`, x, y, n)
 }
 
 #' Rolling Percent Rank
@@ -86,7 +86,7 @@ roll_correlation <- function(x, y, n) {
 #' @description Rolling percent rank normalizes values to a range from 0 to 100.
 #' @export
 roll_percent_rank <- function(x, n) {
-    .Call('QuantTools_roll_percent_rank', PACKAGE = 'QuantTools', x, n)
+    .Call(`_QuantTools_roll_percent_rank`, x, n)
 }
 
 #' Rolling Range
@@ -102,25 +102,25 @@ roll_percent_rank <- function(x, n) {
 #' @description Rolling range is minimum and maximum values over n past values. Can be used to identify price range.
 #' @export
 roll_range <- function(x, n) {
-    .Call('QuantTools_roll_range', PACKAGE = 'QuantTools', x, n)
+    .Call(`_QuantTools_roll_range`, x, n)
 }
 
 #' @rdname roll_range
 #' @export
 roll_quantile <- function(x, n, p) {
-    .Call('QuantTools_roll_quantile', PACKAGE = 'QuantTools', x, n, p)
+    .Call(`_QuantTools_roll_quantile`, x, n, p)
 }
 
 #' @rdname roll_range
 #' @export
 roll_min <- function(x, n) {
-    .Call('QuantTools_roll_min', PACKAGE = 'QuantTools', x, n)
+    .Call(`_QuantTools_roll_min`, x, n)
 }
 
 #' @rdname roll_range
 #' @export
 roll_max <- function(x, n) {
-    .Call('QuantTools_roll_max', PACKAGE = 'QuantTools', x, n)
+    .Call(`_QuantTools_roll_max`, x, n)
 }
 
 #' Rolling Filter
@@ -133,7 +133,7 @@ roll_max <- function(x, n) {
 #' @description Logical vector is returned. This function is useful to filter ticks. Finds consequent elements which absolute change is higher than k standard deviation of past n changes and mark them \code{FALSE}. If sequence length greater than \code{m} values become \code{TRUE}.
 #' @export
 roll_sd_filter <- function(x, n, k = 1, m = 10L) {
-    .Call('QuantTools_roll_sd_filter', PACKAGE = 'QuantTools', x, n, k, m)
+    .Call(`_QuantTools_roll_sd_filter`, x, n, k, m)
 }
 
 #' Rolling Standard Deviation
@@ -145,7 +145,7 @@ roll_sd_filter <- function(x, n, k = 1, m = 10L) {
 #' @description Rolling standard deviation shows standard deviation over n past values.
 #' @export
 roll_sd <- function(x, n) {
-    .Call('QuantTools_roll_sd', PACKAGE = 'QuantTools', x, n)
+    .Call(`_QuantTools_roll_sd`, x, n)
 }
 
 #' Rolling Volume Profile
@@ -161,7 +161,7 @@ roll_sd <- function(x, n) {
 #' @family technical indicators
 #' @export
 roll_volume_profile <- function(ticks, timeFrame, step, alpha, cut) {
-    .Call('QuantTools_roll_volume_profile', PACKAGE = 'QuantTools', ticks, timeFrame, step, alpha, cut)
+    .Call(`_QuantTools_roll_volume_profile`, ticks, timeFrame, step, alpha, cut)
 }
 
 #' Relative Strength Index
@@ -172,11 +172,11 @@ roll_volume_profile <- function(ticks, timeFrame, step, alpha, cut) {
 #' @description Relative strength index aka RSI measures the velocity and magnitude of directional price movements.
 #' @export
 rsi <- function(x, n) {
-    .Call('QuantTools_rsi', PACKAGE = 'QuantTools', x, n)
+    .Call(`_QuantTools_rsi`, x, n)
 }
 
 run_tests <- function() {
-    .Call('QuantTools_run_tests', PACKAGE = 'QuantTools')
+    .Call(`_QuantTools_run_tests`)
 }
 
 #' Simple Moving Average
@@ -187,7 +187,7 @@ run_tests <- function() {
 #' @description Simple moving average also called SMA is the most popular indicator. It shows the average of n past values. Can be used for time series smoothing.
 #' @export
 sma <- function(x, n) {
-    .Call('QuantTools_sma', PACKAGE = 'QuantTools', x, n)
+    .Call(`_QuantTools_sma`, x, n)
 }
 
 #' Stochastic
@@ -202,7 +202,7 @@ sma <- function(x, n) {
 #' @description Stochastic oscillator shows position of price in respect to its range over n past values.
 #' @export
 stochastic <- function(x, n, nFast, nSlow) {
-    .Call('QuantTools_stochastic', PACKAGE = 'QuantTools', x, n, nFast, nSlow)
+    .Call(`_QuantTools_stochastic`, x, n, nFast, nSlow)
 }
 
 #' Convert ticks to candles
@@ -215,6 +215,6 @@ stochastic <- function(x, n, nFast, nSlow) {
 #' @rdname to_candles
 #' @export
 to_candles <- function(ticks, timeframe) {
-    .Call('QuantTools_to_candles', PACKAGE = 'QuantTools', ticks, timeframe)
+    .Call(`_QuantTools_to_candles`, ticks, timeframe)
 }
 

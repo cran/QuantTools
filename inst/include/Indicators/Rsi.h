@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with QuantTools. If not, see <http://www.gnu.org/licenses/>.
 
+// http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:relative_strength_index_rsi
+
 #ifndef RSI_H
 #define RSI_H
 
@@ -30,8 +32,8 @@ class Rsi : public Indicator< double, double, std::vector<double> > {
     //Sma avgLoss;
     std::vector< double > history;
 
-    double sumGain;
-    double sumLoss;
+    double avgGain;
+    double avgLoss;
     int counter;
     int n;
 
@@ -42,8 +44,8 @@ class Rsi : public Indicator< double, double, std::vector<double> > {
     Rsi( int n ) :
     n( n )
     {
-      sumGain = 0;
-      sumLoss = 0;
+      avgGain = 0;
+      avgLoss = 0;
       counter = 0;
       prevValue = NAN;
     }
@@ -55,16 +57,30 @@ class Rsi : public Indicator< double, double, std::vector<double> > {
 
       if( std::isnan( prevValue ) ) prevValue = value;
       double change = value - prevValue;
+      prevValue = value;
+
+      double currGain = change > 0 ?  change : 0;
+      double currLoss = change < 0 ? -change : 0;
 
       if( counter > n ) {
 
-        change > 0 ? sumGain = sumGain * ( n - 1 ) / n + change : sumLoss = sumLoss * ( n - 1 ) / n - change;
+        avgGain = ( avgGain * ( n - 1 ) + currGain ) / n;
+        avgLoss = ( avgLoss * ( n - 1 ) + currLoss ) / n;
 
       } else {
 
-        change > 0 ? sumGain += change : sumLoss += -change;
+        avgGain += currGain;
+        avgLoss += currLoss;
+
+        if( counter == n ) {
+
+          avgGain = avgGain / n;
+          avgLoss = avgLoss / n;
+
+        }
 
       }
+      //Rcpp::Rcout << " avgGain " << avgGain << " avgLoss " << avgLoss << " currGain " << currGain << " currLoss " << currLoss << std::endl;
 
       IsFormed() ? history.push_back( GetValue() ) : history.push_back( NA_REAL );
 
@@ -75,7 +91,7 @@ class Rsi : public Indicator< double, double, std::vector<double> > {
 
     double GetValue() {
 
-      double rsi = sumGain > 0 ? 100. - 100. / ( 1 + sumGain / sumLoss ) : 100.;
+      double rsi = avgGain > 0 ? 100. - 100. / ( 1 + avgGain / avgLoss ) : 100.;
       return rsi;
 
     }
@@ -84,9 +100,10 @@ class Rsi : public Indicator< double, double, std::vector<double> > {
 
     void Reset() {
 
-      sumGain = 0;
-      sumLoss = 0;
+      avgGain = 0;
+      avgLoss = 0;
       counter = 0;
+      prevValue = NAN;
 
     }
 

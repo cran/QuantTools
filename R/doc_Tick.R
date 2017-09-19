@@ -17,11 +17,14 @@
 
 #' @title C++ Tick class
 #' @description C++ class documentation
-#' @section Usage: \code{Tick{ int id, double time, double price, int volume }}
+#' @section Usage: \code{Tick{ int id, double time, double price, int volume, double bid, double ask, bool system }}
 #' @param id id
 #' @param time seconds since epoch
 #' @param price price
 #' @param volume volume
+#' @param bid best bid
+#' @param ask best offer
+#' @param system \code{true} ignore all except \code{time} and \code{id} value, default is \code{false}
 #' @name Tick
 #' @rdname cpp_Tick
 #' @family backtesting classes

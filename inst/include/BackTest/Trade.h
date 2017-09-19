@@ -39,10 +39,12 @@ class Trade {
     double timeEnter  = NA_REAL;
     double timeExit   = NA_REAL;
     double pnl        = NA_REAL;
+    double mtm        = 0;
     double mtmMin     = 0;
     double mtmMax     = 0;
     double cost       = 0;
     double pnlRel     = NA_REAL;
+    double mtmRel     = 0;
     double mtmMinRel  = 0;
     double mtmMaxRel  = 0;
     double costRel    = 0;

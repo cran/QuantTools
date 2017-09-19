@@ -350,8 +350,8 @@ PlotTs$set( 'public', 'calc_basis', function() {
 
       } else {
 
-        basis[, t_from := round_POSIXct( t_from, self$style_info$time$round, 'mins', floor   ) ]
-        basis[, t_to   := round_POSIXct( t_to  , self$style_info$time$round, 'mins', ceiling ) ]
+        basis[, t_from := round_POSIXct( t_from, self$style_info$time$round, 'mins', floor ) - as.difftime( self$style_info$time$round, units = 'mins' ) ]
+        basis[, t_to   := round_POSIXct( t_to  , self$style_info$time$round, 'mins', floor ) + as.difftime( self$style_info$time$round, units = 'mins' ) ]
 
       }
 
@@ -510,6 +510,7 @@ PlotTs$set( 'public', 'calc_time_grid_and_labels', function() {
   )
   dates[, x := self$t_to_x( t ) ]
   dates[, l := format( t, '%d' ) ]
+  dates = dates[, .SD[.N], by = x ]
 
   month = dates[ !duplicated( format( t, '%Y-%m' ) ) ]
   month[, l := format( t, '%b' ) ]
@@ -594,6 +595,37 @@ PlotTs$set( 'public', 'print', function(...) {
 
 } )
 
+
+PlotTs$set( 'public', 'stack', function( names = NULL, labels = names, col = 'auto', timeframe = 'auto', position, type, gap ) {
+
+  if( !missing( position ) ) self$style_info$stack$position = position
+  if( !missing( type     ) ) self$style_info$stack$type     = type
+  if( !missing( gap      ) ) self$style_info$stack$gap      = gap
+
+  if( !is.null( self$stack_info ) ) stop( 'only single stack trace supported' )
+
+  # scan data for stack
+  data_id = which( sapply( self$data, function( x ) all( names %in% names( x ) ) ) )
+  if( length( data_id ) > 1 ) {
+
+    data_id = data_id[1]
+    warning( 'multiple data sets found having specified stack names: using first data set' )
+
+  }
+  if( length( data_id ) == 0 ) return( self )#stop( 'no data sets found having specified ohlc names' )
+
+  self$stack_info = list(
+    data_id   = data_id,
+    name      = names,
+    label     = labels,
+    col       = col,
+    timeframe = timeframe
+  )
+
+  self
+
+} )
+
 PlotTs$set( 'public', 'lines',
             function( names = NULL, labels = names, type = 'l', lty = 1, pch = 19, col = 'auto', bg = NA, lwd = 1, lend = 'round' ) {
 
@@ -672,6 +704,63 @@ PlotTs$set( 'public', 'candles', function( ohlc = c( 'open', 'high', 'low', 'clo
   self
 
 } )
+PlotTs$set( 'public', 'plot_stack', function() {
+
+  if( is.null( self$stack_info ) ) return( invisible( self ) )
+
+  info = as.data.table( self$stack_info[ c( 'name', 'label', 'col' ) ] )
+  info[ col == 'auto', col := distinct_colors[ 1:.N ] ]
+
+  x = self$data_x[[ self$stack_info$data_id ]]
+
+  timeframe = if( self$stack_info$timeframe == 'auto' ) min( diff( x ), na.rm = T ) else self$stack_info$timeframe
+  width = timeframe * ( 1 - self$style_info$stack$gap ) / 2
+
+  y = self$data[[ self$stack_info$data_id ]][ x >= self$frame$xlim[1] & x <= self$frame$xlim[2] & !is.na( x ) ][, info$name, with = F ]
+  x = x[ x >= self$frame$xlim[1] & x <= self$frame$xlim[2] & !is.na( x ) ]
+
+  y_positive = y * ( y > 0 )
+  y_negative = y * ( y < 0 )
+
+  yy = y_positive
+  yy[, {
+
+    y = as.vector( .SD )
+    col = info[ order( y ) ]
+    y = cumsum( y[ order( y ) ] )
+
+
+
+  }, by = .( 1:nrow( yy ) ) ]
+  apply( yy, 1, order )
+
+
+
+  rect( x - width * 2, y[[ open ]], x        , y[[ close ]], col = col, border = col )
+
+  switch(
+    self$style_info$candle$type,
+    barchart = {
+
+      segments( x - width    , y[[ high  ]], x - width, y[[ low   ]], col = col )
+      segments( x - width * 2, y[[ open  ]], x - width, y[[ open  ]], col = col )
+      segments( x - width    , y[[ close ]], x        , y[[ close ]], col = col )
+
+    },
+    candlestick = {
+
+      segments( x - width    , y[[ high ]], x - width, y[[ low   ]], col = col )
+      rect    ( x - width * 2, y[[ open ]], x        , y[[ close ]], col = col, border = col )
+
+    }
+  )
+
+  self$candles_info$last = tail( y[[ close ]], 1 )
+  self$candles_info$col  = tail( col, 1 )
+
+  invisible( self )
+
+} )
 
 PlotTs$set( 'public', 'plot_candles', function() {
 
@@ -684,8 +773,8 @@ PlotTs$set( 'public', 'plot_candles', function() {
 
   x = self$data_x[[ self$candles_info$data_id ]]
 
-  timeframe = if( self$candles_info$timeframe == 'auto' ) min( diff( x ), na.rm = T ) / 2 else self$candles_info$timeframe
-  width = timeframe * ( 1 - self$style_info$candle$gap )
+  timeframe = if( self$candles_info$timeframe == 'auto' ) min( diff( x ), na.rm = T ) else self$candles_info$timeframe
+  width = timeframe * ( 1 - self$style_info$candle$gap ) / 2
 
   y = self$data[[ self$candles_info$data_id ]][ x >= self$frame$xlim[1] & x <= self$frame$xlim[2] & !is.na( x ) ]
   x = x[ x >= self$frame$xlim[1] & x <= self$frame$xlim[2] & !is.na( x ) ]

@@ -11,12 +11,18 @@
 \item{price}{price}
 
 \item{volume}{volume}
+
+\item{bid}{best bid}
+
+\item{ask}{best offer}
+
+\item{system}{\code{true} ignore all except \code{time} and \code{id} value, default is \code{false}}
 }
 \description{
 C++ class documentation
 }
 \section{Usage}{
- \code{Tick{ int id, double time, double price, int volume }}
+ \code{Tick{ int id, double time, double price, int volume, double bid, double ask, bool system }}
 }
 
 \seealso{

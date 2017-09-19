@@ -32,6 +32,7 @@ public:
   double time;
   int volume;
   int timeFrame;
+  bool isEmpty = true;
 
   Candle( int timeFrame ) :
   timeFrame( timeFrame )
@@ -48,25 +49,63 @@ public:
     if( startOver ) {
 
       this->time = time;
-      id     = tick.id;
-      open   = tick.price;
-      high   = tick.price;
-      low    = tick.price;
-      close  = tick.price;
-      volume = tick.volume;
+
+      id = tick.id;
+
+      if( not tick.system ) {
+
+        open   = tick.price;
+        high   = tick.price;
+        low    = tick.price;
+        close  = tick.price;
+        volume = tick.volume;
+
+        isEmpty = false;
+
+      } else {
+
+        open   = NAN;
+        high   = NAN;
+        low    = NAN;
+        close  = NAN;
+        volume = 0;
+
+        isEmpty = true;
+
+      }
 
       return *this;
 
     }
 
     id = tick.id;
-    close = tick.price;
-    volume += tick.volume;
 
-    if( high < tick.price ) high = tick.price;
-    if( low  > tick.price ) low  = tick.price;
+    if( not tick.system ) {
+
+      if( isEmpty ) {
+
+        open   = tick.price;
+        high   = tick.price;
+        low    = tick.price;
+        close  = tick.price;
+        volume = tick.volume;
+
+        isEmpty = false;
+
+      } else {
+
+        close = tick.price;
+        volume += tick.volume;
+
+        if( high < tick.price ) high = tick.price;
+        if( low  > tick.price ) low  = tick.price;
+
+      }
+
+    }
 
     return *this;
+
 
   }
 

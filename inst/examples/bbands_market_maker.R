@@ -1,14 +1,14 @@
 \donttest{
 
-#####################
-## Bollinger Bands ##
-#####################
+##################################
+## Bollinger Bands Market Maker ##
+##################################
 
 # load tick data
 data( 'ticks' )
 
 # define strategy
-strategy_source = system.file( package = 'QuantTools', 'examples/bbands.cpp' )
+strategy_source = system.file( package = 'QuantTools', 'examples/bbands_market_maker.cpp' )
 # compile strategy
 Rcpp::sourceCpp( strategy_source )
 
@@ -22,15 +22,16 @@ parameters = data.table(
 # set options, see 'Options' section
 options = list(
   cost    = list( tradeAbs = -0.01 ),
-  latency = 0.1 # 100 milliseconds
+  latency = 0.1, # 100 milliseconds
+  allow_limit_to_hit_market = TRUE
 )
 
 # run test
-test_summary = bbands( ticks, parameters, options, fast = TRUE )
+test_summary = bbands_market_maker( ticks, parameters, options, fast = TRUE )
 print( test_summary )
 
 # run test
-test = bbands( ticks, parameters, options, fast = FALSE )
+test = bbands_market_maker( ticks, parameters, options, fast = FALSE )
 
 # plot result
 indicators = plot_dts(
@@ -47,7 +48,7 @@ interval = '2016-01-19 12/13'
 par( mfrow = c( 2, 1 ), oma = c( 5, 4, 2, 4 ) + 0.1, mar = c( 0, 0, 0, 0 ) )
 indicators $limits( tlim = interval )$style( time = list( visible = FALSE ) )
 performance$limits( tlim = interval )
-title( 'Bollinger Bands', outer = TRUE )
+title( 'Bollinger Bands On Limit Orders', outer = TRUE )
 par( mfrow = c( 1, 1 ), oma = c( 0, 0, 0, 0 ), mar = c( 5, 4, 4, 2 ) + 0.1 )
 
 }

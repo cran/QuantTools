@@ -23,6 +23,8 @@ C++ class documentation
 \cr \code{onTick( \link{Tick} tick )}       \tab \code{std::function}       \tab called on new tick event
 \cr \code{onMarketOpen()}                   \tab \code{std::function}       \tab called on trading hours start
 \cr \code{onMarketClose()}                  \tab \code{std::function}       \tab called on trading hours end
+\cr \code{onIntervalOpen()}                 \tab \code{std::function}       \tab called on intervals start
+\cr \code{onIntervalClose()}                \tab \code{std::function}       \tab called on intervals end
 \cr \code{Feed( \link{Tick} tick )}         \tab \code{void}                \tab process by individual tick
 \cr \code{Feed( Rcpp::DataFrame ticks )}    \tab \code{void}                \tab batch process, see 'Ticks' section
 \cr \code{SendOrder( \link{Order}* order )} \tab \code{void}                \tab send order to exchange
@@ -36,6 +38,13 @@ C++ class documentation
 \cr \code{SetLatency( double x )}           \tab \code{void}                \tab see 'latency' in 'Options' section
 \cr \code{SetTradingHours( double start, double end )}
                                             \tab \code{void}                \tab see 'trading_hours' in 'Options' section
+\cr \code{SetPriceStep( double priceStep )} \tab \code{void}                \tab see 'price_step' in 'Options' section
+\cr \code{SetExecutionType( ExecutionType executionType )}
+                                            \tab \code{void}                \tab see 'execution_type' in 'Options' section
+\cr \code{SetExecutionType( std::string executionType )}
+                                            \tab \code{void}                \tab see 'execution_type' in 'Options' section
+\cr \code{SetIntervals( std::vector<double> starts, std::vector<double> ends )}
+                                            \tab \code{void}                \tab see 'intervals' in 'Options' section
 \cr \code{AllowLimitToHitMarket()}          \tab \code{void}                \tab see 'allow_limit_to_hit_market' in 'Options' section
 \cr \code{SetOptions( Rcpp::List options )} \tab \code{void}                \tab see 'Options' section
 \cr \code{StopTrading()}                    \tab \code{void}                \tab if called trading stop triggered. See 'stop' in 'Options' section
@@ -52,7 +61,7 @@ C++ class documentation
 \cr \code{GetSummary()}                     \tab \code{Rcpp::List}          \tab trades summary, see 'Summary' section
 \cr \code{GetOnCandleMarketValueHistory()}  \tab \code{std::vector<double>} \tab vector of portfolio value history recalculated on candle complete
 \cr \code{GetOnCandleDrawDownHistory()}     \tab \code{std::vector<double>} \tab vector of portfolio drawdown history recalculated on candle complete
-\cr \code{GetOnDayClosePerformanceHistory()}\tab \code{Rcpp::List}          \tab data.table of daily performance history with columns \code{date, return, pnl, drawdown, n_per_day, avg_pnl}
+\cr \code{GetOnDayClosePerformanceHistory()}\tab \code{Rcpp::List}          \tab daily performance history, see 'Daily Performance' section
 \cr \code{Reset()}                          \tab \code{void}                \tab resets to initial state
 }
 }
@@ -65,7 +74,12 @@ When execution conditions met on exchange - order is executed and system receive
 execution confirmation \code{latencyReceive} seconds later.\cr
 When system sends cancel request to exchange and after \code{latencySend} seconds
 when exchange receives cancel request if order is not executed yet it is cancelled and
-cancellation confirmation is received by system after \code{latencyReceive} seconds.
+cancellation confirmation is received by system after \code{latencyReceive} seconds.\cr
+Two execution types supported \code{trade}(default) and \code{bbo}.
+\code{trade} type processes orders using tick \code{price}s and \code{bbo} processes orders using preceding tick \code{bid} and \code{ask} values.
+Market orders in \code{bbo} mode executed at worst price: at \code{bid} for sells and at \code{ask} for buys, in \code{trade} mode at current tick \code{price}.
+Buy limit orders executed when \code{ask} goes under order price and sell orders executed when \code{bid} goes above order price.
+In case limit order is placed in the market it is executed as market order if \code{allow_limit_to_hit_market} set to \code{TRUE} (default is \code{FALSE}).\cr
 }
 
 \section{Ticks}{
@@ -138,10 +152,12 @@ Trades returned as data.table with the following columns:
 \cr price_enter   \tab enter order execution price
 \cr price_exit    \tab exit order execution price
 \cr pnl           \tab trade pnl net
+\cr mtm           \tab mark-to-market
 \cr mtm_min       \tab min mark-to-market
 \cr mtm_max       \tab max mark-to-market
 \cr cost          \tab absolute trading cost
 \cr pnl_rel       \tab trade pnl net in basis points
+\cr mtm_rel       \tab mark-to-market in basis points
 \cr mtm_min_rel   \tab min mark-to-market in basis points
 \cr mtm_max_rel   \tab max mark-to-market in basis points
 \cr cost_rel      \tab relative trading cost in basis points
@@ -183,6 +199,20 @@ Back test summary statistics:
 }
 }
 
+\section{Daily Performance}{
+
+Back test daily performance history:
+\tabular{ll}{
+\cr \strong{Name} \tab \strong{Description}
+\cr date          \tab date
+\cr return        \tab return
+\cr pnl           \tab cumulative pnl
+\cr drawdown      \tab drawdown
+\cr n_per_day     \tab number of closed trades
+\cr avg_pnl       \tab average trade pnl
+}
+}
+
 \section{Options}{
 
 List of following elements. All options are optional.
@@ -219,6 +249,16 @@ List of following elements. All options are optional.
  \item{\strong{allow_limit_to_hit_market}}{
    if TRUE, limit order execution price set to market price if executed on same tick as registered.
  }
+ \item{\strong{price_step}}{
+   if positive, limit order init price rounded to \code{price_step} down for buy orders and up for sell orders before placement.
+   if negative, limit order init price rounded to \code{price_step} up for buy orders and down for sell orders before placement.
+ }
+ \item{\strong{execution_type}}{
+   \code{trade} or \code{bbo}.
+ }
+ \item{\strong{intervals}}{
+   sorted multi row data.table with POSIXct timestamps columns \code{start, end}. Represents time intervals. At time start \code{onIntervalOpen} called and at time end \code{onIntervalClose} called.
+ }
 
 }
 }
@@ -236,7 +276,6 @@ data( 'ticks' )
 # define strategy
 strategy_source = system.file( package = 'QuantTools', 'examples/sma_crossover.cpp' )
 # compile strategy
-Sys.setenv( 'USE_CXX11' = 'yes' ) # https://github.com/RcppCore/Rcpp/issues/683
 Rcpp::sourceCpp( strategy_source )
 
 # set strategy parameters
@@ -290,7 +329,6 @@ data( 'ticks' )
 # define strategy
 strategy_source = system.file( package = 'QuantTools', 'examples/bbands.cpp' )
 # compile strategy
-Sys.setenv( 'USE_CXX11' = 'yes' ) # https://github.com/RcppCore/Rcpp/issues/683
 Rcpp::sourceCpp( strategy_source )
 
 # set strategy parameters
@@ -329,6 +367,60 @@ par( mfrow = c( 2, 1 ), oma = c( 5, 4, 2, 4 ) + 0.1, mar = c( 0, 0, 0, 0 ) )
 indicators $limits( tlim = interval )$style( time = list( visible = FALSE ) )
 performance$limits( tlim = interval )
 title( 'Bollinger Bands', outer = TRUE )
+par( mfrow = c( 1, 1 ), oma = c( 0, 0, 0, 0 ), mar = c( 5, 4, 4, 2 ) + 0.1 )
+
+}
+\donttest{
+
+##################################
+## Bollinger Bands Market Maker ##
+##################################
+
+# load tick data
+data( 'ticks' )
+
+# define strategy
+strategy_source = system.file( package = 'QuantTools', 'examples/bbands_market_maker.cpp' )
+# compile strategy
+Rcpp::sourceCpp( strategy_source )
+
+# set strategy parameters
+parameters = data.table(
+  n         = 100,
+  k         = 0.5,
+  timeframe = 60
+)
+
+# set options, see 'Options' section
+options = list(
+  cost    = list( tradeAbs = -0.01 ),
+  latency = 0.1, # 100 milliseconds
+  allow_limit_to_hit_market = TRUE
+)
+
+# run test
+test_summary = bbands_market_maker( ticks, parameters, options, fast = TRUE )
+print( test_summary )
+
+# run test
+test = bbands_market_maker( ticks, parameters, options, fast = FALSE )
+
+# plot result
+indicators = plot_dts(
+test$indicators,
+test$orders[ side == 'buy' , .( time_processed, buy  = price_exec ) ],
+test$orders[ side == 'sell', .( time_processed, sell = price_exec ) ] )$
+lines( c( 'lower', 'sma', 'upper' ) )$
+lines( c( 'buy', 'sell' ), type = 'p', pch = c( 24, 25 ), col = c( 'blue', 'red' ) )
+
+performance = plot_dts( test$indicators[, .( time, pnl = pnl * 100, drawdown = drawdown * 100 ) ] )$
+lines( c( 'pnl', 'drawdown' ), c( '\% pnl', '\% drawdown' ), col = c( 'darkolivegreen', 'darkred' ) )
+
+interval = '2016-01-19 12/13'
+par( mfrow = c( 2, 1 ), oma = c( 5, 4, 2, 4 ) + 0.1, mar = c( 0, 0, 0, 0 ) )
+indicators $limits( tlim = interval )$style( time = list( visible = FALSE ) )
+performance$limits( tlim = interval )
+title( 'Bollinger Bands On Limit Orders', outer = TRUE )
 par( mfrow = c( 1, 1 ), oma = c( 0, 0, 0, 0 ), mar = c( 5, 4, 4, 2 ) + 0.1 )
 
 }

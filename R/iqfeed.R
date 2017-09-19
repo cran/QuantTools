@@ -367,96 +367,380 @@
 
 #
 NULL
-.get_iqfeed = function( cmd, verbose = .settings$iqfeed_verbose ) {
 
-  con = socketConnection( host = .settings$iqfeed_host, port = .settings$iqfeed_port, open = 'a+b', blocking = TRUE, timeout = .settings$iqfeed_timeout )
+iqfeed = R6::R6Class( 'iqfeed', lock_objects = F )
+iqfeed$set( 'public', 'initialize', function( host = .settings$iqfeed_host, port = list( stream = 5009, lookup = .settings$iqfeed_port ), timeout = .settings$iqfeed_timeout, verbose = .settings$iqfeed_verbose, stream = FALSE ) {
 
-  n_buffer = .settings$iqfeed_buffer
+  self$stream = stream
+  self$settings = list( host = host, port = port, timeout = timeout, verbose = verbose, buffer_size = .settings$iqfeed_buffer )
+  self$settings$buffer_size_stream = 1000
 
-  writeBin( charToRaw( "S,SET PROTOCOL,5.1\r\n" ), con )
+} )
+iqfeed$set( 'public', 'verbose_message', function( text ) {
 
-  cat( cmd, file = con )
+  text = paste( Sys.time(), substr( text, 1, 100 ), '...' )
+  text = gsub( '\n','\\\\n', text )
+  text = gsub( '\r','\\\\r', text )
 
-  dat = vector('list', 10000 )
-  i = 1
-  x = NULL
-  if( verbose ) message( paste( Sys.time(), gsub( '\r\n','\\\\r\\\\n', cmd ) ) )
-  if( verbose ) message( paste( Sys.time(), 'start download...' ) )
-  repeat{
+  if( self$settings$verbose ) message( text )
 
-    y = x
-    x = readBin( con, 'raw', n = n_buffer )
-    if( i == 1 ) if( verbose ) message( paste( Sys.time(), gsub( '\r\n','\\\\r\\\\n', rawToChar( x[ 1:100 ] ) ) ) )
-    len = length(x)
-    dat[[i]] = x
+} )
+iqfeed$set( 'public', 'read_chain', function( prefix, split, con, n ) {
 
-    if( len < n_buffer ) {
+  text = paste0( prefix, readChar( con, n ) )
+  last_split = regexpr( paste0( split, '[^', split, ']*$' ), text )
 
-      ch = rawToChar( x )
+  if( last_split > 0 ) list(
+    complete = strtrim( text, last_split ),
+    tail = substr( text, last_split + 1, nchar( text ) )
+  ) else list(
+    complete = '',
+    tail = text
+  )
 
-      if( i > 1 ) if( verbose ) message( paste( Sys.time(), gsub( '\r\n','\\\\r\\\\n', rawToChar( x[ max(len - 100,0):len ] ) ) ) )
-      if( grepl( '!NO_DATA!', ch, fixed = TRUE ) ) {
-        close( con )
-        return( NULL )
+} )
+iqfeed$set( 'public', 'connect', function() {
 
-      }
-      if( grepl( 'Unauthorized user ID.', ch, fixed = TRUE ) ) {
-        close( con )
-        message( paste( 'Unauthorized user ID (' , gsub( '\r\n','\\\\r\\\\n', cmd ), ')' ) )
-        return( NULL )
+  ## connect
+  self$connection = lapply( self$settings$port[ c( 'lookup', if( self$stream ) 'stream' ) ], socketConnection,
+                            host    = self$settings$host,
+                            timeout = self$settings$timeout,
+                            open = 'a+b',
+                            blocking = TRUE )
 
-      }
-      if( grepl( 'Could not connect to History socket.', ch, fixed = TRUE ) ) {
-        close( con )
-        message( paste( 'Could not connect to History socket (' , gsub( '\r\n','\\\\r\\\\n', cmd ), ')' ) )
-        return( NULL )
+  ## set protocol
+  protocol = 'S,SET PROTOCOL,5.2\r\n'
+  if( self$stream ) writeChar( protocol, self$connection$stream )
+  writeChar( protocol, self$connection$lookup )
+  ## confirm lookup
+  confirmation = gsub( 'SET', 'CURRENT', protocol )
+  self$verbose_message( readChar( self$connection$lookup, n = nchar( confirmation ) ) )
 
-      }
+} )
+iqfeed$set( 'public', 'disconnect', function() {
 
-      if( grepl( '!ENDMSG!,\r\n', rawToChar( c( y, x ) ), fixed = TRUE ) ) {
+  if( self$stream ) close( self$connection$stream )
+  close( self$connection$lookup )
 
-        dat[[i]] = dat[[i]][1:( len - nchar( '!ENDMSG!,\r\n' , type = "bytes") )]
-        if( verbose ) message( paste( Sys.time(), '...downloaded...' ) )
-        break
+} )
+iqfeed$set( 'public', 'subscribe', function( symbol ) {
 
-      }
+  if( is.null( self$subscribed ) ) self$subscribed = symbol else self$subscribed[ length( self$subscribed ) + 1 ] =  symbol
+  cmd = paste0( 't', symbol, '\r\n' )
+  cat( cmd, file = self$connection$stream )
 
+} )
+iqfeed$set( 'public', 'unsubscribe', function( symbol ) {
 
-    }
+  self$subscribed = self$subscribed[ self$subscribed != symbol ]
+  cmd = paste0( 'r', symbol, '\r\n' )
+  cat( cmd, file = self$connection$stream )
 
-    i = i + 1
+} )
+iqfeed$set( 'public', 'read', function() {
+
+  if( is.null( self$stream ) ) {
+    self$stream_messages = vector( 5e07, mode = 'list' )
+    self$stream_quotes   = vector( 5e07, mode = 'list' )
+    self$stream_hbeats   = vector( 5e07, mode = 'list' )
+    self$stream_index = 1
+    self$stream_tail = ''
+  }
+  curr_time = Sys.time() + as.difftime( 1, units = 'hours' )
+  attr( curr_time, 'tzone' ) = 'EST'
+  stop_message = paste0( 'T,', format( curr_time, '%Y%m%d %H:%M:%S' ) )
+
+  hbeats_names = c( 'T', 'time' )
+  quotes_names = c( 'Q','symbol','price','volume','time','trade_market_center','total_volume','bid','bid_volume','ask','ask_volume','open','high','low','close','contents','trade_conditions','tail' )
+
+  message_chunk = list( complete = '', tail = self$stream_tail )
+
+  repeat {
+
+    message_chunk = self$read_chain( message_chunk$tail, split = '\n', con = self$connection$stream, n = self$settings$buffer_size_stream )
+    self$stream_tail = message_chunk$tail
+
+    text = message_chunk$complete
+    messages = strsplit( text, '\n', fixed = TRUE )[[1]]
+    header_tag = 'S,CURRENT UPDATE FIELDNAMES,'
+    header = grep( header_tag, messages, fixed = T, value = T )
+    quotes = grep( '^Q,', messages, value = T )
+    hbeats = grep( '^T,', messages, value = T )
+
+    self$stream_messages[[ self$stream_index ]] = messages
+    if( length( quotes ) ) self$stream_quotes[[ self$stream_index ]] = fread( paste( c( quotes, '' ), collapse = '\n' ), header = F, col.names = quotes_names )[,-c( 'Q', 'tail' ) ]
+    if( length( hbeats ) ) self$stream_hbeats[[ self$stream_index ]] = fread( paste( c( hbeats, '' ), collapse = '\n' ), header = F, col.names = hbeats_names, sep = ',' )[,-'T' ]
+    # broken when 1 line fed to fread
+
+    self$stream_index = self$stream_index + 1
+
+    terminated = grepl( stop_message, message_chunk$complete, fixed = T )
+    if( terminated ) break
+
   }
 
-  close( con )
+} )
+iqfeed$set( 'public', 'get_trades', function() {
 
-  res = do.call( c, dat )
+  rbindlist( self$stream_quotes[ 2:self$stream_index - 1 ] )
 
-  res = rawToChar( res )
+} )
+iqfeed$set( 'public', 'lookup', function( cmd, colClasses = NULL ) {
 
-  res = gsub( ', ', ';', res, fixed = T )
+  writeChar( cmd, self$connection$lookup )
 
-  suppressWarnings( {
-  z = fread( res, sep = ',',header = FALSE, skip = 1, showProgress = verbose )
-  })
-  # last column is always NA
-  set( z, j = ncol( z ), value = NULL )
-  if( verbose ) message( paste( Sys.time(), '...parsed!' ) )
-  return( z )
+  message_chunks = vector( 5e06, mode = 'list' )
+  message_chunk_index = 1
 
-}
+  retry_index = 0
+  max_n_retry = 10
+  terminator  = '!ENDMSG!,\r\n'
+  no_data_tag = '!NO_DATA!'
+  invalid_tag = 'Unauthorized user ID.'
+  message_chunk = list( complete = '', tail = '' )
 
-.get_iqfeed_markets_info = function( ){
-  markets = .get_iqfeed( cmd = 'SLM\r\n' )[,1:3, with = FALSE]
-  setnames( markets, c( 'market_id', 'short_name', 'long_name' ) )
+  repeat {
+
+    message_chunk = self$read_chain( message_chunk$tail, split = '\n', con = self$connection$lookup, n = self$settings$buffer_size )
+    self$verbose_message( message_chunk$complete )
+    terminated = grepl( terminator, message_chunk$complete, fixed = T )
+    if( terminated ) {
+
+      if( grepl( no_data_tag, message_chunk$complete, fixed = T ) ) {
+        message( no_data_tag )
+        return( NULL )
+      }
+      if( grepl( invalid_tag, message_chunk$complete, fixed = T ) ) {
+        message( invalid_tag )
+        return( NULL )
+      }
+
+      message_chunk$complete = strtrim( message_chunk$complete, nchar( message_chunk$complete ) - nchar( terminator ) )
+
+    }
+    message_chunk$complete = gsub( ', ', ';', message_chunk$complete, fixed = TRUE )
+
+    if( message_chunk$complete != '' ) { 
+      
+      message_chunks[[ message_chunk_index ]] = fread( message_chunk$complete, sep = ',', colClasses = colClasses, fill = T )
+      
+    } else {
+      
+      retry_index = retry_index + 1
+      if( retry_index > max_n_retry ) return( message( 'Tried 10 times with no result. Check IQFeed client and try again. NULL returned.' ) )
+      
+    }
+
+    if( terminated ) break
+    message_chunk_index = message_chunk_index + 1
+
+  }
+  x = rbindlist( message_chunks[ 1:message_chunk_index ] )
+  x[, -ncol( x ), with = FALSE ]
+
+} )
+iqfeed$set( 'public', 'lookup_mult', function( cmd ) {
+
+  #lapply( cmd, writeChar, self$connection$lookup )
+  writeChar( paste( cmd, collapse = '' ), self$connection$lookup )
+
+  message_chunks = vector( 5e06, mode = 'list' )
+  message_chunk_index = 1
+
+  retry_index = 0
+  max_n_retry = 10
+  terminator  = '!ENDMSG!,\r\n'
+
+  n_terminator = 0
+  n_terminator_max = length( cmd )
+
+  nstr = function( x, pattern ) ( nchar( x ) - nchar( gsub( pattern, '', x, fixed = T ) ) ) / nchar( pattern )
+
+  repeat {
+
+    message_chunk = self$read_chain( message_chunk$tail, split = '\n', con = self$connection$lookup, n = self$settings$buffer_size )
+    self$verbose_message( message_chunk$complete )
+    n_terminator = n_terminator + nstr( message_chunk$complete, terminator )
+
+    terminated = n_terminator == n_terminator_max
+    message_chunk$complete = gsub( ', ', ';', message_chunk$complete, fixed = TRUE )
+
+    if( message_chunk$complete != '' ) message_chunks[[ message_chunk_index ]] = message_chunk$complete
+
+    if( terminated ) break
+    message_chunk_index = message_chunk_index + 1
+
+  }
+
+  x = paste( unlist( message_chunks[ 1:message_chunk_index ] ), collapse = '\r\n' )
+  x = strsplit( x, split = terminator, fixed = TRUE )[[1]]
+  x = lapply( x, gsub, pattern = ',\r', replacement = '', fixed = T )
+  x = lapply( x, fread )
+  names( x ) = cmd
+
+  return( x )
+
+} )
+iqfeed$set( 'public', 'get_markets', function() {
+
+  markets = self$lookup( cmd = 'SLM\r\n' )
+  setnames( markets, c( 'market_id', 'short_name', 'long_name', 'group_id', 'group_name' ) )
   markets[]
-}
 
+} )
+iqfeed$set( 'public', 'get_trade_conditions', function() {
+
+  codes = self$lookup( cmd = 'STC\r\n' )
+  setnames( codes, c( 'condition_code', 'short_name', 'description' ) )
+  codes[, condition_code := toupper( as.hexmode( condition_code ) ) ][]
+
+} )
+iqfeed$set( 'public', 'get_security_types', function() {
+
+  types = self$lookup( cmd = 'SST\r\n' )
+  setnames( types, c( 'type_id', 'short_name', 'long_name' ) )
+  types[]
+
+} )
+iqfeed$set( 'public', 'search_by_filter', function( search_field = 's', search_string = 'AAPL', filter_type = 't', filter_value = '' ) {
+
+  cmd = paste0( paste( 'SBF', search_field, search_string, filter_type, filter_value, sep = ',' ), '\r\n' )
+  search_result = self$lookup( cmd )
+  if( is.null( search_result ) ) return()
+  setnames( search_result, c( 'symbol', 'market', 'type', 'description' ) )
+  search_result
+
+} )
+iqfeed$set( 'public', 'get_ticks', function( symbol, n_ticks, n_days, from, to ) {
+
+  cmd = if( !missing( n_ticks ) ) {
+
+    paste0( paste( 'HTX', symbol, max = n_ticks, direction = '1', sep = ',' ), '\r\n' )
+
+  } else if( !missing( n_days ) ) {
+
+    paste0( paste( 'HTD', symbol, n_days, max = '', time_begin = '', time_end = '', direction = '1', sep = ',' ), '\r\n' )
+
+  } else if( missing( from ) & missing( to ) ) stop( 'no arguments set' ) else {
+
+    paste0( paste( 'HTT', symbol, datetime_begin = format( as.Date( from ), '%Y%m%d' ), datetime_end = format( as.Date( to ) + ( from == to ), '%Y%m%d' ), max = '', time_begin = '', time_end = '', direction = '1', sep = ',' ), '\r\n' )
+
+  }
+
+  colClasses = c( 'character', rep( 'numeric', 6 ), rep( 'character', 3 ), 'numeric' )
+  ticks = self$lookup( cmd, colClasses )
+  if( is.null( ticks ) ) return( NULL )
+  setnames( ticks, c( 'time','price','volume','size','bid','ask','tick_id','basis_for_last', 'trade_market_center', 'trade_conditions' ) )
+  ticks[, time := fasttime::fastPOSIXct( time, 'UTC' ) ][]
+
+} )
+iqfeed$set( 'public', 'get_intraday_candles', function( symbol, interval, n_candles, n_days, from, to, type = 's' ) {
+
+  cmd = if( !missing( n_candles ) ) {
+
+    paste0( paste( 'HIX', symbol, interval, max = n_candles, direction = '1', request_id = '', points_sent = '', type, sep = ',' ), '\r\n' )
+
+  } else if( !missing( n_days ) ) {
+
+    paste0( paste( 'HID', symbol, interval, n_days, max = '', time_begin = '', time_end = '', direction = '1', request_id = '', points_sent = '', type, sep = ',' ), '\r\n' )
+
+  } else if( missing( from ) & missing( to ) ) stop( 'no arguments set' ) else {
+
+    paste0( paste( 'HIT', symbol, interval, datetime_begin = format( as.Date( from ), '%Y%m%d' ), datetime_end = format( as.Date( to ) + ( from == to ), '%Y%m%d' ), max = '', time_begin = '', time_end = '', direction = '1', request_id = '', points_sent = '', type, sep = ',' ), '\r\n' )
+
+  }
+
+  candles = self$lookup( cmd )
+  if( is.null( candles ) ) return( NULL )
+  setnames( candles, c( 'time', 'high', 'low', 'open', 'close', 'total_volume', 'volume', 'n_trades' ) )
+  candles[, ':='( total_volume = NULL, n_trades = NULL ) ]
+  setcolorder( candles, c( 'time', 'open', 'high', 'low', 'close', 'volume' ) )
+  candles[, time := fasttime::fastPOSIXct( time, 'UTC' ) ][]
+
+} )
+iqfeed$set( 'public', 'get_daily_candles', function( symbol, n_days, n_weeks, n_months, from, to ) {
+
+  cmd = if( !missing( n_days ) ) {
+
+    paste0( paste( 'HDX', symbol, max = n_days, direction = '1', request_id = '', points_sent = '', sep = ',' ), '\r\n' )
+
+  } else if( !missing( n_weeks ) ) {
+
+    paste0( paste( 'HWX', symbol, max = n_weeks, direction = '1', request_id = '', points_sent = '', sep = ',' ), '\r\n' )
+
+  } else if( !missing( n_months ) ) {
+
+    paste0( paste( 'HMX', symbol, max = n_months, direction = '1', request_id = '', points_sent = '', sep = ',' ), '\r\n' )
+
+  } else if( missing( from ) & missing( to ) ) stop( 'no arguments set' ) else {
+
+    paste0( paste( 'HDT', symbol, date_begin = format( as.Date( from ), '%Y%m%d' ), date_end = format( as.Date( to ), '%Y%m%d' ), max = '', direction = '1', request_id = '', points_sent = '', sep = ',' ), '\r\n' )
+
+  }
+
+  candles = self$lookup( cmd )
+  if( is.null( candles ) ) return( NULL )
+
+  setnames( candles, c( 'date', 'high', 'low', 'open', 'close', 'volume', 'open_interest' ) )
+
+  setcolorder( candles, c( 'date', 'open', 'high', 'low', 'close', 'volume', 'open_interest' ) )
+  candles[, date := as.Date( date ) ][]
+
+} )
+
+.get_iqfeed_daily_candles = function( symbol, from, to ) {
+
+  self = iqfeed$new()
+  self$connect()
+  x = self$get_daily_candles( symbol = symbol, from = from, to = to )
+  self$disconnect()
+  return( x )
+
+}
+.get_iqfeed_recent_daily_candles = function( symbol, days = 10 ) {
+
+  self = iqfeed$new()
+  self$connect()
+  x = self$get_daily_candles( symbol = symbol, n_days = days )
+  self$disconnect()
+  return( x )
+
+}
+.get_iqfeed_candles = function( symbol, from, to, interval = 3600 ) {
+  self = iqfeed$new()
+  self$connect()
+  x = self$get_intraday_candles( symbol = symbol, interval = interval, from = from, to = to )
+  self$disconnect()
+  return( x )
+}
+.get_iqfeed_ticks = function( symbol, from, to = from ) {
+  self = iqfeed$new()
+  self$connect()
+  x = self$get_ticks( symbol = symbol, from = from, to = to )
+  self$disconnect()
+  return( x )
+}
+.get_iqfeed = function( cmd ) {
+  self = iqfeed$new()
+  self$connect()
+  x = self$lookup( cmd )
+  self$disconnect()
+  return( x )
+}
+.get_iqfeed_markets_info = function( ){
+  self = iqfeed$new()
+  self$connect()
+  x = self$get_markets()
+  self$disconnect()
+  return( x )
+}
 .get_iqfeed_security_types_info = function( ){
-  security_types = .get_iqfeed( cmd = 'SST\r\n' )[,1:3, with = FALSE]
-  setnames( security_types, c( 'type_id', 'short_name', 'long_name' ) )
-  security_types[]
+  self = iqfeed$new()
+  self$connect()
+  x = self$get_security_types()
+  self$disconnect()
+  return( x )
 }
-
 .get_iqfeed_symbol_info = function( symbol, type_ids ){
 
   cmd = paste0( 'SBF,s,', symbol, ',t,', paste( type_ids, collapse = ' ' ), '\r\n' )
@@ -469,139 +753,11 @@ NULL
   info[]
 
 }
-
 .get_iqfeed_trade_conditions_info = function( ){
-  codes = .get_iqfeed( cmd = 'STC\r\n' )[,1:3, with = FALSE]
-  setnames( codes, c( 'condition_code', 'short_name', 'description' ) )
-  condition_code = NULL
-  codes[, condition_code := toupper( as.hexmode( condition_code ) ) ]
-  codes[]
-}
-
-.get_iqfeed_ticks = function( symbol, from, to = from, time_from = '', time_to = '' ){
-
-  get_iqfeed_ticks = function( symbol, from, to, time_from = '', time_to = '' ) {
-    cmd = paste( "HTT",symbol, from = gsub( '-|:','', from ), to = gsub( '-|:','', to ), "", time_from, time_to, 1, "\r\n", sep = "," )
-    x = .get_iqfeed( cmd )[, 1:10, with = FALSE ]
-    if( is.null( x ) ) return( NULL )
-
-    names = c( 'time','price','volume','size','bid','ask','tick_id','basis_for_last', 'trade_market_center', 'trade_conditions' )
-    setnames( x, names )
-
-    time = NULL
-    x[, time := fasttime::fastPOSIXct( time, 'UTC' ) ]
-
-    return( x[] )
-  }
-
-  # split data into 60 days chunks
-  dates = seq( as.Date( from ), as.Date( to ), length.out = ceiling( as.numeric( as.Date( to ) - as.Date( from ) ) / 60 ) + 1  )
-  if( length( dates ) == 1 ){
-    periods = data.table(
-      from = dates,
-      to = dates + 1
-    )
-  }else{
-    periods = data.table(
-      from = dates[-length(dates)],
-      to = dates[-1] + 1
-    )
-    periods[ -1, from := from + 1 ]
-  }
-
-  dat = vector( mode = 'list', length = nrow( periods ) )
-  for( i in 1:nrow( periods ) ) dat[[i]] = get_iqfeed_ticks( symbol, periods[i,from], periods[i,to], time_from, time_to )
-  dat = rbindlist( dat )
-  if( nrow( dat ) == 0 ) return( NULL )
-  return( dat[] )
-
-
-}
-
-.get_iqfeed_candles = function( symbol, from, to, time_from = '', time_to = '', interval = 3600 ){
-
-  get_iqfeed_candles = function( symbol, from, to, time_from = '', time_to = '', interval = 3600 ) {
-
-    cmd = paste( "HIT",symbol, interval,from = gsub( '-|:','', from ), to = gsub( '-|:','', to ),"", time_from, time_to, 1, "\r\n", sep = "," )
-    x = .get_iqfeed( cmd )
-    if( is.null( x ) ) return( NULL )
-    x = x[, c( 1:5,7 ), with = FALSE ]
-    setnames( x, c( 'time', 'high', 'low', 'open', 'close', 'volume' ) )
-    setcolorder( x, c( 'time', 'open', 'high', 'low', 'close', 'volume' ) )
-
-    x[, time := fasttime::fastPOSIXct( time, 'UTC' ) ]
-
-    return( x[] )
-
-  }
-
-  if( interval == 60 & as.Date( to ) - as.Date( from ) > 500 ) {
-
-    # split data into 500 days chunks
-    dates = seq( as.Date( from ), as.Date( to ), length.out = ceiling( as.numeric( as.Date( to ) - as.Date( from ) ) / 500 ) + 1  )
-    if( length( dates ) == 1 ){
-      periods = data.table(
-        from = dates,
-        to = dates + 1
-      )
-    }else{
-      periods = data.table(
-        from = dates[-length(dates)],
-        to = dates[-1] + 1
-      )
-      periods[ -1, from := from + 1 ]
-    }
-
-    x = periods[, {
-
-      candles = get_iqfeed_candles( symbol, from, to, time_from, time_to, interval )
-      if( !is.null( candles ) ) {
-
-        time = open = high = low = close = volume = NULL
-        candles[ time < as.POSIXct( paste( to, '00:00:01' ), tz = 'UTC' ),
-                 list(
-                   time,
-                   open  = as.double( open  ),
-                   high  = as.double( high  ),
-                   low   = as.double( low   ),
-                   close = as.double( close ),
-                   volume
-                   ) ]
-
-      }
-
-    }, by = 1:nrow( periods ) ]
-    x[, nrow := NULL ]
-
-  } else {
-
-    x = get_iqfeed_candles( symbol, from, to, time_from, time_to, interval )
-
-  }
-
-  return( x[] )
-
-}
-
-.get_iqfeed_recent_daily_candles = function( symbol, days = 10 ){
-  cmd = paste( 'HDX', symbol, days, '\r\n', sep = ',' )
-  x = .get_iqfeed( cmd )
-  if( is.null( x ) ) return( NULL )
-  x = x[.N:1, 1:6, with = FALSE ]
-  setnames( x, c( 'date', 'high', 'low', 'open', 'close', 'volume' ) )
-  setcolorder( x, c( 'date', 'open', 'high', 'low', 'close', 'volume' ) )
-  x[, date := as.Date( date ) ]
-  return( x[] )
-}
-
-.get_iqfeed_daily_candles = function( symbol, from, to ){
-  cmd = paste( 'HDT', symbol, from = gsub( '-|:','', from ), to = gsub( '-|:','', to ), '', 1, '', '\r\n', sep = ',' )
-  x = .get_iqfeed( cmd )
-  if( is.null( x ) ) return( NULL )
-  x = x[, 1:5, with = FALSE ]
-  setnames( x, c( 'date', 'high', 'low', 'open', 'close' ) )
-  setcolorder( x, c( 'date', 'open', 'high', 'low', 'close' ) )
-  x[, date := as.Date( date ) ]
-  return( x[] )
+  self = iqfeed$new()
+  self$connect()
+  x = self$get_trade_conditions()
+  self$disconnect()
+  return( x )
 }
 

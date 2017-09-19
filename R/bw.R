@@ -93,7 +93,7 @@ bw = function( x, interval ) {
 
       if( length( interval ) == 2 ) interval = paste( interval, collapse = '/' )
       interval = as.Date( .text_to_time_interval( interval ) )
-      return( interval[1] <= x & x < interval[2] )
+      return( interval[1] <= x & x <= interval[2] )
 
     }
   }

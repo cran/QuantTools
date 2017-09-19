@@ -295,7 +295,7 @@ store_iqfeed_data = function( from = NULL, to = format( Sys.Date() ), verbose = 
 
 .get_local_data = function( symbol, from, to, source, period ) {
 
-  data_dir = switch( source, Finam = .settings$finam_storage, iqfeed = .settings$iqfeed_storage )
+  data_dir = switch( source, finam = .settings$finam_storage, iqfeed = .settings$iqfeed_storage )
 
   if( data_dir == '' ) stop( paste0('please set storage path via QuantTools_settings( \'', source, '_storage\', \'/storage/path/\' )
   use store_', source, '_data to add some data into the storage' ) )
