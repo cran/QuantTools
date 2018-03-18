@@ -103,8 +103,8 @@ public:
       double varX  = n * sumXX - sumX * sumX; // * 1.0 / ( n * ( n - 1 ) )
       double varY  = n * sumYY - sumY * sumY; // * 1.0 / ( n * ( n - 1 ) )
 
-      coeffs.beta     = covXY / varY;
-      coeffs.alpha    = ( sumX - coeffs.beta  * sumY ) / n;
+      coeffs.beta     = covXY / varX;
+      coeffs.alpha    = ( sumY - coeffs.beta  * sumX ) / n;
       coeffs.r        = covXY / std::sqrt( varX * varY );
       coeffs.rSquared = coeffs.r * coeffs.r;
 

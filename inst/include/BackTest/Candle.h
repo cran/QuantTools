@@ -41,12 +41,18 @@ public:
     time = 0;
   }
 
-  Candle Add( const Tick& tick ) {
+  bool   IsFormed( const Tick& tick ) {
 
     double time = floor( tick.time / timeFrame ) * timeFrame + timeFrame;
-    bool startOver = this->time != time;
+    return this->time != time and this->time != 0;
 
-    if( startOver ) {
+  }
+
+  Candle Add( const Tick& tick ) {
+
+    if( IsFormed( tick ) or this->time == 0 ) {
+
+      double time = floor( tick.time / timeFrame ) * timeFrame + timeFrame;
 
       this->time = time;
 

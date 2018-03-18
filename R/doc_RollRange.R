@@ -26,15 +26,15 @@
 #'
 #' @section Public Members and Methods:
 #' \tabular{lll}{
-#' \cr \strong{Name}                 \tab \strong{Return Type}        \tab \strong{Description}
-#' \cr \code{Add( InputType value )} \tab \code{void}                 \tab update indicator
-#' \cr \code{Reset()}                \tab \code{void}                 \tab reset to initial state
-#' \cr \code{IsFormed()}             \tab \code{bool}                 \tab is indicator value valid?
-#' \cr \code{GetValue()}             \tab \code{Range}                \tab has members \code{double min, max, quantile}
-#' \cr \code{GetMinHistory()}        \tab \code{std::vector< double >}\tab return min history
-#' \cr \code{GetMaxHistory()}        \tab \code{std::vector< double >}\tab return max history
-#' \cr \code{GetQuantileHistory()}   \tab \code{std::vector< double >}\tab return quantile history
-#' \cr \code{GetHistory()}           \tab \code{List}                 \tab return values history data.table with columns \code{min, max}
+#'  \strong{Name}                 \tab \strong{Return Type}        \tab \strong{Description}                         \cr
+#'  \code{Add( InputType value )} \tab \code{void}                 \tab update indicator                             \cr
+#'  \code{Reset()}                \tab \code{void}                 \tab reset to initial state                       \cr
+#'  \code{IsFormed()}             \tab \code{bool}                 \tab is indicator value valid?                    \cr
+#'  \code{GetValue()}             \tab \code{Range}                \tab has members \code{double min, max, quantile} \cr
+#'  \code{GetMinHistory()}        \tab \code{std::vector< double >}\tab return min history                           \cr
+#'  \code{GetMaxHistory()}        \tab \code{std::vector< double >}\tab return max history                           \cr
+#'  \code{GetQuantileHistory()}   \tab \code{std::vector< double >}\tab return quantile history                      \cr
+#'  \code{GetHistory()}           \tab \code{List}                 \tab return values history data.table with columns \code{min, max}
 #' }
 #'
 #' @name RollRange

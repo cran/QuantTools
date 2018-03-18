@@ -65,6 +65,8 @@ public:
 
   }
 
+  double GetTime() { return time; }
+
 };
 
 #endif //ALARM_H

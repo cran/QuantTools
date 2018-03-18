@@ -1,3 +1,21 @@
+#### v0.5.7:
+- `Processor` `allow_exact_stop` option added.
+- `ProcessorMulti` class added for backtesting single strategy on multiple symbols.
+- `Order` stop and trail types added.
+- `Alarm.GetTime()` method added.
+- `Crossover` initial pair value set to `NAN`.
+- `get_finam_data` local storage fixed.
+- `get_iqfeed_data` retries to download if no message received.
+- `get_iqfeed_data` `from` and `to` timestamp support added.
+- `get_yahoo_data` dividend adjustment added and yahoo's split bug workaround added.
+- `roll_lm` `x` and `y` inconsistency with `lm` fixed.
+- `bw` `to` is included for `Date`s.
+- `plot_dts` segments support added.
+- `ListBuilder` possible protection stack imbalance fixed.
+- fixed duplicated trades when orders cancelled after trade close.
+- documentation layout updated for rdocumentation.com to be displayed correctly.
+
+
 #### v0.5.6:
 - `Processor` multiple options support added. You can set execution type, price step and act on time intervals. See help `?Processor` for details.
     - use `intervals` to set intervals and `onIntervalOpen()` and `onIntervalClose()` to act on interval open and close. 

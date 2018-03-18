@@ -130,7 +130,10 @@ store_finam_data = function( from = NULL, to = format( Sys.Date() ), verbose = T
 
     if( from_is_null ) from = NULL
 
-    dates_available = gsub( '.rds', '', list.files( paste( save_dir, symbol, sep = '/' ), pattern = '.rds' ) )
+    # ticks
+    if( verbose ) message( 'ticks:' )
+
+    dates_available = gsub( '.rds', '', list.files( paste( save_dir, symbol, sep = '/' ), pattern = '\\d{4}-\\d{2}-\\d{2}.rds' ) )
     if( is.null( from ) && length( dates_available ) == 0 ) {
 
       from = .settings$finam_storage_from
@@ -162,6 +165,50 @@ store_finam_data = function( from = NULL, to = format( Sys.Date() ), verbose = T
       if( verbose ) message( paste( date,  'saved' ) )
 
     }
+
+    # minutes
+    if( verbose ) message( 'minutes:' )
+
+    if( from_is_null ) from = NULL
+    dates_available = gsub( '.rds', '-01', list.files( paste( save_dir, symbol, sep = '/' ), pattern = '\\d{4}-\\d{2}.rds' ) )
+    if( is.null( from ) && length( dates_available ) == 0 ) {
+
+      from = .settings$finam_storage_from
+      if( from == '' ) stop( 'please set Finam storage start date via QuantTools_settings( \'finam_storage_from\', \'YYYYMMDD\' )' )
+      message( 'not found in storage, \ntrying to download since storage start date' )
+
+    }
+    if( is.null( from ) && to >= max( dates_available ) ) {
+
+      from = max( dates_available )
+      message( paste( 'dates to be added:', from, '-', to ) )
+
+    }
+
+    from = as.Date( from )
+    to   = as.Date( to )
+
+    data.table( from = as.Date( unique( format( seq( from, to, 1 ), '%Y-%m-01' ) ) ) )[, to := shift( from - 1, type = 'lead', fill = to ) ][, {
+
+      month = format( from, '%Y-%m' )
+
+      mins = get_finam_data( symbol, from, to, period = '1min' )
+
+      if( !is.null( mins ) ) {
+
+        dir.create( paste0( save_dir, '/' , symbol ), recursive = TRUE, showWarnings = FALSE )
+
+        saveRDS( mins, file = paste0( save_dir, '/' , symbol, '/', month, '.rds' ) )
+
+        if( verbose ) message( paste( month,  'saved' ) )
+
+      } else {
+
+        if( verbose ) message( paste( month,  'not available' ) )
+
+      }
+
+    }, by = from ]
 
   }
 
@@ -304,7 +351,7 @@ store_iqfeed_data = function( from = NULL, to = format( Sys.Date() ), verbose = 
 
     dates_available = gsub( '.rds', '', list.files( paste( data_dir, symbol, sep = '/' ), pattern = '\\d{4}-\\d{2}-\\d{2}.rds' ) )
 
-    dates_to_load = sort( dates_available[ dates_available %bw% c( from, to ) ] )
+    dates_to_load = sort( dates_available[ dates_available %bw% substr( c( from, to ), 1, 10 ) ] )
 
     data = vector( length( dates_to_load ), mode = 'list' )
     names( data ) = dates_to_load
@@ -312,6 +359,11 @@ store_iqfeed_data = function( from = NULL, to = format( Sys.Date() ), verbose = 
     for( date in dates_to_load ) data[[ date ]] = readRDS( file = paste0( data_dir, '/' , symbol, '/', date, '.rds' ) )
 
     data = rbindlist( data )
+
+    time_range = as.POSIXct( format( as.Date( c( from, to ) ) + c( 0, 1 ) ), 'UTC' )
+
+    time = NULL
+    if( !is.null( data ) ) data = data[ time > time_range[1] & time < time_range[2] ]
 
     return( data )
 
@@ -333,7 +385,7 @@ store_iqfeed_data = function( from = NULL, to = format( Sys.Date() ), verbose = 
     time_range = as.POSIXct( format( as.Date( c( from, to ) ) + c( 0, 1 ) ), 'UTC' )
 
     time = NULL
-    data = data[ time > time_range[1] & time <= time_range[2] ]
+    if( !is.null( data ) ) data = data[ time > time_range[1] & time < time_range[2] ]
 
     return( data )
 

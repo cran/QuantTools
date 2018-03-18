@@ -26,15 +26,15 @@ class ListBuilder {
 private:
 
   std::vector< std::string > names;
-  std::vector< SEXP > elements;
-  size_t nProtected;
+  Rcpp::List elements;
+
   ListBuilder( ListBuilder const& ) {};
 
   std::string type;
 
 public:
 
-  ListBuilder() { nProtected = 0; type = "list"; };
+  ListBuilder() { type = "list"; };
   ~ListBuilder() {};
 
   inline ListBuilder& AsDataFrame( ) { type = "data.frame"; return *this; }
@@ -68,18 +68,15 @@ public:
   template <typename T>
   inline ListBuilder& Add( const std::string& name, const T& x ) {
 
-    names.push_back( name) ;
-    elements.push_back( PROTECT( Rcpp::wrap( x ) ) );
-    nProtected++;
+    names.push_back( name ) ;
+    elements.push_back( Rcpp::wrap( x ) );
     return *this;
 
   }
 
   inline operator Rcpp::List() const {
 
-    Rcpp::List result( elements.size() );
-
-    for( size_t i = 0; i < elements.size(); ++i ) result[i] = elements[i];
+    Rcpp::List result( elements );
 
     result.attr( "names" ) = Rcpp::wrap( names );
 
@@ -96,7 +93,6 @@ public:
 
     }
 
-    UNPROTECT( nProtected );
     return result;
 
   }

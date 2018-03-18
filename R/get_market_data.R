@@ -21,7 +21,8 @@
 #' @param from,to text dates in format \code{"YYYY-mm-dd"}
 #' @param period candle period \code{tick, 1min, 5min, 10min, 15min, 30min, hour, day, week, month}
 #' @param split.adjusted should data be split adjusted?
-#' @param local should data be loaded from local storage? See 'Details' section
+#' @param dividend.adjusted should data be split adjusted?
+#' @param local should data be loaded from local storage? See 'Local Storage' section
 #' @param code futures or option code name, e.g. \code{"RIU6"}
 #' @param contract,frequency,day_exp same as in \code{\link{gen_futures_codes}}
 #' @name get_market_data
@@ -31,13 +32,57 @@
 #' \href{https://www.iqfeed.net/symbolguide/index.cfm?symbolguide=lookup}{IQFeed},
 #' \href{https://finance.yahoo.com/}{Yahoo} and
 #' \href{https://www.google.com/finance}{Google} sources. \cr
-#' Note: Timestamps timezones set to UTC. \cr
-#' It is recommended to store tick market data locally.
+
+#' \subsection{IQFeed}{
+#'
+#'  \code{data.table} with following data returned:
+#'  \tabular{ll}{
+#'             daily:    \tab date, open, high, low, close, volume, open_interest  \cr
+#'             intraday: \tab date, open, high, low, close, volume  \cr
+#'             tick:     \tab time, price, volume, size, bid, ask, tick_id, basis_for_last, trade_market_center, trade_conditions  \cr
+#'  }
+#'  See \link{iqfeed} specification for details. \cr
+#'  Note: \code{from} and \code{to} can be set as text in format \code{"YYYY-mm-dd HH:MM:SS"}.
+#'
+#'  }
+#'  \subsection{Finam}{
+#'
+#'  \code{data.table} with following data returned:
+#'  \tabular{ll}{
+#'             daily:    \tab date, open, high, low, close, volume  \cr
+#'             intraday: \tab date, open, high, low, close, volume  \cr
+#'             tick:     \tab time, price, volume                   \cr
+#'  }
+#'
+#'  }
+#'  \subsection{Yahoo}{
+#'
+#'  \code{data.table} with following data returned:
+#'  \tabular{ll}{
+#'             daily:    \tab date, open, high, low, close, adj_close, volume  \cr
+#'             splits and dividends:    \tab date, value, event  \cr
+#'  }
+#'
+#'  }
+#'  \subsection{Google}{
+#'
+#'   \code{data.table} with following data returned:
+#'   \tabular{ll}{
+#'             daily:    \tab date, open, high, low, close, volume  \cr
+#'   }
+#'
+#'  }
+#'  \subsection{MOEX}{
+#'    data can be retrieved from local storage only in order to minimize load on MOEX data servers. See 'Local Storage' section.
+#'  }
+#'
+#' @note
+#' Timestamps timezones set to UTC. \cr
+#' @section Local Storage: It is recommended to store tick market data locally.
 #' Load time is reduced dramatically. It is a good way to collect market data as
 #' e.g. IQFeed gives only 180 days of tick data if you would need more it will
 #' cost you a lot. See \code{\link{store_market_data}} for details. \cr
-#' See \link{iqfeed} return format specification. \cr
-#' MOEX data can be retrieved from local storage only in order to minimize load on MOEX data servers. Read \code{\link{store_market_data}} for information on how to store data locally. \cr
+#' Only IQFeed, Finam and MOEX data supported.
 #'
 #' @examples
 #' \donttest{
@@ -101,9 +146,10 @@ yahoo_downloader_env <- new.env()
   x = gsub( 'null', '', x, fixed = T )
   x = fread( x )
   setnames( x, tolower( gsub( ' ', '_', names( x ) ) ) )
-  . = stock_splits = date = NULL
+  . = stock_splits = date = volume = NULL
   if( events == 'split' ) x[, stock_splits := sapply( parse( text = stock_splits ), eval ) ]
   x[, date := as.Date( date ) ]
+  if( events == 'history' ) x[ , volume := as.numeric( volume ) ]
   x[]
 
 }
@@ -111,13 +157,77 @@ yahoo_downloader_env <- new.env()
 # download market data from Yahoo server
 #' @rdname get_market_data
 #' @export
-get_yahoo_data = function( symbol, from, to, split.adjusted = TRUE ) {
-
-  splits = .get_yahoo_data( symbol, from, to, events = 'split' )
+get_yahoo_data = function( symbol, from, to, split.adjusted = TRUE, dividend.adjusted = TRUE ) {
 
   dat = .get_yahoo_data( symbol, from, to, events = 'history' )
 
   if( is.null( dat ) || nrow( dat ) == 0 ) return( dat )
+
+  effective_split = high = low = split_coeff = split_date = stock_splits = volume = NULL
+
+  if( split.adjusted ) {
+
+    splits = .get_yahoo_data( symbol, from, to, events = 'split' )
+
+    dat[ , split_coeff := 1 ]
+    if( !is.null( splits ) ) {
+
+      splits = splits[, list( split_date = date, split = stock_splits ) ]
+      # filter out already adjusted splits ( yahoo finance bug )
+      splits[, effective_split := dat[ which( date == split_date ) + -1:0 ][, close[1] / open[2] ], by = split_date ]
+
+      if( nrow( splits ) > 0 ) {
+
+        splits = splits[ abs( effective_split / split - 1 ) < 0.05 ]
+
+        splits[ , dat[ date < split_date, split_coeff := split_coeff * split ][ NULL ], by = seq_along( splits$split_date ) ]
+
+        dat[ , ':='(
+
+          open   = open   / split_coeff,
+          high   = high   / split_coeff,
+          low    = low    / split_coeff,
+          close  = close  / split_coeff,
+          volume = volume * split_coeff
+
+        ) ]
+
+      }
+
+    }
+
+  }
+  if( dividend.adjusted ) {
+
+    dividends = .get_yahoo_data( symbol, from, to, events = 'div' )
+
+    div = div_coeff = div_date = NULL
+
+    dat[ , div_coeff := 1 ]
+    if( !is.null( dividends ) ) {
+
+      dividends = dividends[, list( div_date = date, div = dividends ) ]
+
+      if( nrow( dividends ) > 0 ) {
+
+        # https://help.yahoo.com/kb/SLN28256.html
+        dividends[ , dat[ date < div_date, div_coeff := div_coeff * ( 1 - div / close[.N] ) ], by = seq_along( dividends$div_date ) ]
+
+        dat[ , ':='(
+
+          open   = open   * div_coeff,
+          high   = high   * div_coeff,
+          low    = low    * div_coeff,
+          close  = close  * div_coeff,
+          volume = volume / div_coeff
+
+        ) ]
+
+      }
+
+    }
+
+  }
 
   # return downloaded data
   return( dat[] )
@@ -178,7 +288,7 @@ get_finam_data = function( symbol, from, to = from, period = 'day', local = FALS
 
   if( local ){
 
-    if( period != 'tick' ) stop( 'only ticks supported in local storage' )
+    if( ! period %in% c( 'tick', '1min' ) ) stop( 'only ticks and 1min supported in local storage' )
 
     data = .get_local_data(  symbol, from, to, source = 'finam', period )
 
@@ -326,6 +436,9 @@ get_finam_data = function( symbol, from, to = from, period = 'day', local = FALS
 #' @export
 get_iqfeed_data = function( symbol, from, to = from, period = 'day', local = FALSE ) {
 
+  from = format( from )
+  to   = format( to   )
+
   curr_date = format( Sys.Date() )
   if( from > curr_date ) from = to = curr_date
   #if( to   > curr_date ) to = curr_date
@@ -375,6 +488,7 @@ get_iqfeed_data = function( symbol, from, to = from, period = 'day', local = FAL
           'hour'  = .get_iqfeed_candles( symbol, from, to, interval = 60 * 60 )
 
           )
+  if( !is.null( data ) && !is.null( data$time ) ) data = data[ time %bw% c( from, to ) ]
   return( data )
 
 }

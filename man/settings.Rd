@@ -56,7 +56,7 @@ QuantTools_settings( list( iqfeed_verbose = TRUE ) )
 
 suppressMessages( library( QuantTools ) )
 
-QuantTools_settings( settings = list(#'
+QuantTools_settings( settings = list(
   iqfeed_storage = paste( path.expand('~') , 'Market Data', 'iqfeed', sep = '/' ),
   iqfeed_symbols = c( 'AAPL', '@ES#' ),
   iqfeed_storage_from = format( Sys.Date() - 3 )

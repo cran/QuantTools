@@ -37,8 +37,7 @@ private:
 
     Crossover()
     {
-      pair = { 0., 0. };
-      type = Type::WAIT;
+      Reset();
     }
 
     void Add( std::pair< double, double > pair )
@@ -72,7 +71,7 @@ private:
 
     }
 
-    bool IsFormed() { return pair.first != 0 and pair.second != 0; }
+    bool IsFormed() { return not ( std::isnan( pair.first ) or std::isnan( pair.second ) ); }
 
     bool IsAbove() { return type == Type::ABOVE; }
     bool IsBelow() { return type == Type::BELOW; }
@@ -86,7 +85,7 @@ private:
     }
 
     void Reset() {
-      pair = { 0., 0. };
+      pair = { NAN, NAN };
       type = Type::WAIT;
     }
 

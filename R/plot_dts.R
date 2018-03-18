@@ -55,33 +55,33 @@
 #'  \item{\bold{\code{$style}}}{
 #'  Change default plot options. Available options are:
 #'  \tabular{lll}{
-#'     \bold{\code{grid}}\cr
+#'     \bold{\code{grid}}\tab \tab \cr
 #'     \code{minute}      \tab \code{list(col,lty)} \tab minute vertical gridline color and line type \cr
 #'     \code{hour}        \tab \code{list(col,lty)} \tab hour vertical gridline color and line type   \cr
 #'     \code{day}         \tab \code{list(col,lty)} \tab day vertical gridline color and line type    \cr
 #'     \code{month}       \tab \code{list(col,lty)} \tab month vertical gridline color and line type  \cr
 #'     \code{year}        \tab \code{list(col,lty)} \tab year vertical gridline color and line type   \cr
 #'     \code{zero}        \tab \code{list(col,lty)} \tab zero horizontal gridline color and line type \cr
-#'     \bold{\code{time}}\cr
+#'     \bold{\code{time}}\tab \tab \cr
 #'     \code{grid}        \tab \code{logical}   \tab should vertical gridlines be plotted?                 \cr
 #'     \code{resolution}  \tab \code{character} \tab auto, minute, hour, day, month, year or years         \cr
 #'     \code{round}       \tab \code{numeric}   \tab time axis rounding in minutes                         \cr
 #'     \code{visible}     \tab \code{logical}   \tab should time axis be plotted?                          \cr
-#'     \bold{\code{value}}\cr
+#'     \bold{\code{value}}\tab \tab \cr
 #'     \code{grid}        \tab \code{logical}  \tab should horizontal gridlines be plotted? \cr
 #'     \code{last}        \tab \code{logical}  \tab should last values be plotted?          \cr
 #'     \code{log}         \tab \code{logical}  \tab should y axis be in logarithmic scale?  \cr
 #'     \code{visible}     \tab \code{logical}  \tab should y axis be plotted?               \cr
-#'     \bold{\code{candle}}\cr
+#'     \bold{\code{candle}}\tab \tab \cr
 #'     \code{auto}          \tab \code{logical}                 \tab shoud candles be automatically detected and plotted?  \cr
 #'     \code{col}           \tab \code{list(mono,up,flat,down)} \tab colors                                                \cr
 #'     \code{gap}           \tab \code{numeric}                 \tab gap between candles in fraction of \code{width}       \cr
 #'     \code{mono}          \tab \code{logical}                 \tab should all candles have same color?                   \cr
 #'     \code{position}      \tab \code{character}               \tab relative to time position only \code{'end'} supported \cr
 #'     \code{type}          \tab \code{character}               \tab \code{'candlestick'} or \code{'barchart'}             \cr
-#'     \bold{\code{line}}\cr
+#'     \bold{\code{line}}\tab \tab \cr
 #'     \code{auto}          \tab \code{logical}                 \tab shoud lines be automatically detected and plotted?    \cr
-#'     \bold{\code{legend}}\cr
+#'     \bold{\code{legend}}\tab \tab \cr
 #'     \code{col}           \tab \code{list(background,frame)} \tab colors                       \cr
 #'     \code{horizontal}    \tab \code{logical}                \tab should legend be horizontal? \cr
 #'     \code{inset}         \tab \code{numeric}                \tab see \link[graphics]{legend}  \cr
@@ -343,6 +343,9 @@ PlotTs$set( 'public', 'calc_basis', function() {
       # calculate daily intervals
 
       basis = data.table( time = t )[, .( t_from = time[1 ], t_to = time[.N] ), by = .( date = as.Date( time ) ) ]
+      if( any( basis[, t_from == t_to ] ) & self$style_info$time$round == 0 ) {
+        basis[, t_to := t_from + as.difftime( 24, units = 'hours' ) ]
+      }
       if( !is.null( self$time_range ) ) {
 
         basis[, t_from := fasttime::fastPOSIXct( date, self$tzone ) + self$time_range[1] ]
@@ -626,6 +629,33 @@ PlotTs$set( 'public', 'stack', function( names = NULL, labels = names, col = 'au
 
 } )
 
+PlotTs$set( 'public', 'segments', function( data, lty = 1, col = 'auto', lwd = 1 ) {
+
+  if( is.null( self$segments_info ) ) {
+
+    self$segments_length = 0
+    self$segments_info = vector( mode = 'list', length = 100 )
+
+  }
+  self$segments_length = self$segments_length + 1
+  self$segments_info[[ self$segments_length ]] = list( data = data, lty = lty, col = col, lwd = lwd )
+  invisible( self )
+
+} )
+
+PlotTs$set( 'public', 'plot_segments', function() {
+
+  if( is.null( self$segments_info ) ) return( self )
+  lapply( self$segments_info[ 1:self$segments_length ], function( s ) {
+  segments(
+    self$t_to_x( s$data[[1]] ), s$data[[2]],
+    self$t_to_x( s$data[[3]] ), s$data[[4]],
+    col = s$col, lty = s$lty, lwd = s$lwd )
+  } )
+  invisible( self )
+
+} )
+
 PlotTs$set( 'public', 'lines',
             function( names = NULL, labels = names, type = 'l', lty = 1, pch = 19, col = 'auto', bg = NA, lwd = 1, lend = 'round' ) {
 
@@ -872,6 +902,7 @@ PlotTs$set( 'public', 'plot', function() {
   self$plot_time_grid()
   self$plot_candles()
   self$plot_lines()
+  self$plot_segments()
   self$plot_legend()
   self$plot_last_values()
 

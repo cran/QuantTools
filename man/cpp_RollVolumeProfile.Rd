@@ -25,12 +25,12 @@ R functions \link{roll_volume_profile}.
 \section{Public Members and Methods}{
 
 \tabular{lll}{
-\cr \strong{Name}                 \tab \strong{Return Type}          \tab \strong{Description}
-\cr \code{Add( \link{Tick} tick )}\tab \code{void}                   \tab update indicator
-\cr \code{Reset()}                \tab \code{void}                   \tab reset to initial state
-\cr \code{IsFormed()}             \tab \code{bool}                   \tab is indicator value valid?
-\cr \code{GetValue()}             \tab \code{std::map<double,double>}\tab histogram where first is price and second is volume
-\cr \code{GetHistory()}           \tab \code{List}                   \tab return values history data.table with columns \code{time, profile} where profile is data.table with columns \code{time, price, volume}
+\strong{Name}                 \tab \strong{Return Type}          \tab \strong{Description}                                \cr
+\code{Add( \link{Tick} tick )}\tab \code{void}                   \tab update indicator                                    \cr
+\code{Reset()}                \tab \code{void}                   \tab reset to initial state                              \cr
+\code{IsFormed()}             \tab \code{bool}                   \tab is indicator value valid?                           \cr
+\code{GetValue()}             \tab \code{std::map<double,double>}\tab histogram where first is price and second is volume \cr
+\code{GetHistory()}           \tab \code{List}                   \tab return values history data.table with columns \code{time, profile} where profile is data.table with columns \code{time, price, volume}
 }
 }
 

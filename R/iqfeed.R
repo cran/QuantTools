@@ -388,6 +388,7 @@ iqfeed$set( 'public', 'verbose_message', function( text ) {
 iqfeed$set( 'public', 'read_chain', function( prefix, split, con, n ) {
 
   text = paste0( prefix, readChar( con, n ) )
+  if( self$settings$timeout < 1 ) Sys.sleep( self$settings$timeout )
   last_split = regexpr( paste0( split, '[^', split, ']*$' ), text )
 
   if( last_split > 0 ) list(
@@ -412,6 +413,7 @@ iqfeed$set( 'public', 'connect', function() {
   protocol = 'S,SET PROTOCOL,5.2\r\n'
   if( self$stream ) writeChar( protocol, self$connection$stream )
   writeChar( protocol, self$connection$lookup )
+  if( self$settings$timeout < 1 ) Sys.sleep( self$settings$timeout )
   ## confirm lookup
   confirmation = gsub( 'SET', 'CURRENT', protocol )
   self$verbose_message( readChar( self$connection$lookup, n = nchar( confirmation ) ) )
@@ -520,15 +522,15 @@ iqfeed$set( 'public', 'lookup', function( cmd, colClasses = NULL ) {
     }
     message_chunk$complete = gsub( ', ', ';', message_chunk$complete, fixed = TRUE )
 
-    if( message_chunk$complete != '' ) { 
-      
+    if( message_chunk$complete != '' ) {
+
       message_chunks[[ message_chunk_index ]] = fread( message_chunk$complete, sep = ',', colClasses = colClasses, fill = T )
-      
+
     } else {
-      
+
       retry_index = retry_index + 1
       if( retry_index > max_n_retry ) return( message( 'Tried 10 times with no result. Check IQFeed client and try again. NULL returned.' ) )
-      
+
     }
 
     if( terminated ) break
@@ -623,7 +625,7 @@ iqfeed$set( 'public', 'get_ticks', function( symbol, n_ticks, n_days, from, to )
 
   } else if( missing( from ) & missing( to ) ) stop( 'no arguments set' ) else {
 
-    paste0( paste( 'HTT', symbol, datetime_begin = format( as.Date( from ), '%Y%m%d' ), datetime_end = format( as.Date( to ) + ( from == to ), '%Y%m%d' ), max = '', time_begin = '', time_end = '', direction = '1', sep = ',' ), '\r\n' )
+    paste0( paste( 'HTT', symbol, datetime_begin = format( as.POSIXct( from ), '%Y%m%d %H%M%S' ), datetime_end = format( as.POSIXct( to ) + ( nchar( to ) == 10 ) * as.difftime( '24:00:00' ), '%Y%m%d %H%M%S' ), max = '', time_begin = '', time_end = '', direction = '1', sep = ',' ), '\r\n' )
 
   }
 
@@ -646,7 +648,7 @@ iqfeed$set( 'public', 'get_intraday_candles', function( symbol, interval, n_cand
 
   } else if( missing( from ) & missing( to ) ) stop( 'no arguments set' ) else {
 
-    paste0( paste( 'HIT', symbol, interval, datetime_begin = format( as.Date( from ), '%Y%m%d' ), datetime_end = format( as.Date( to ) + ( from == to ), '%Y%m%d' ), max = '', time_begin = '', time_end = '', direction = '1', request_id = '', points_sent = '', type, sep = ',' ), '\r\n' )
+    paste0( paste( 'HIT', symbol, interval, datetime_begin = format( as.POSIXct( from ), '%Y%m%d %H%M%S' ), datetime_end = format( as.POSIXct( to ) + ( nchar( to ) == 10 ) * as.difftime( '24:00:00' ), '%Y%m%d %H%M%S' ), max = '', time_begin = '', time_end = '', direction = '1', request_id = '', points_sent = '', type, sep = ',' ), '\r\n' )
 
   }
 

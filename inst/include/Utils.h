@@ -18,6 +18,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <time.h>
+
 // https://stackoverflow.com/questions/824118/why-is-floor-so-slow
 inline int fastFloor(double x)
 {
@@ -28,5 +30,15 @@ inline int fastCeiling( double x )
 {
     return ( int ) x + ( x > ( int ) x );
 }
+
+inline int floorDateToMonthStart( int x ) {
+
+  int secondsInDay = 24 * 60 * 60;
+  time_t t( x * secondsInDay );
+  time_t tMonth = t - ( gmtime( &t )->tm_mday - 1 ) * secondsInDay;
+  return tMonth / secondsInDay;
+
+}
+
 
 #endif //UTILS_H

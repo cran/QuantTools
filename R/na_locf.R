@@ -23,7 +23,12 @@
 #' @export
 na_locf = function( x, na = NA ) {
 
-  if( is.list( x ) ) return( na_locf_list( x, na ) )
+  if( is.list( x ) ) {
+
+    if( inherits( x, 'data.table' ) ) return( setDT( na_locf_list( x, na ) ) )
+    return( na_locf_list( x, na ) )
+
+  }
   if( is.vector( x ) | inherits( x, c( 'POSIXct', 'Date' ) ) ) return( na_locf_vector( x, na ) )
   stop( 'x must be list or vector' )
 

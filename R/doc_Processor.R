@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Stanislav Kovalevsky
+# Copyright (C) 2016-2018 Stanislav Kovalevsky
 #
 # This file is part of QuantTools.
 #
@@ -25,51 +25,52 @@
 #'
 #' @section Public Members and Methods:
 #' \tabular{lll}{
-#' \cr \strong{Name}                           \tab \strong{Return Type}       \tab \strong{Description}
-#' \cr \code{onCandle( \link{Candle} candle )} \tab \code{std::function}       \tab called on new candle event
-#' \cr \code{onTick( \link{Tick} tick )}       \tab \code{std::function}       \tab called on new tick event
-#' \cr \code{onMarketOpen()}                   \tab \code{std::function}       \tab called on trading hours start
-#' \cr \code{onMarketClose()}                  \tab \code{std::function}       \tab called on trading hours end
-#' \cr \code{onIntervalOpen()}                 \tab \code{std::function}       \tab called on intervals start
-#' \cr \code{onIntervalClose()}                \tab \code{std::function}       \tab called on intervals end
-#' \cr \code{Feed( \link{Tick} tick )}         \tab \code{void}                \tab process by individual tick
-#' \cr \code{Feed( Rcpp::DataFrame ticks )}    \tab \code{void}                \tab batch process, see 'Ticks' section
-#' \cr \code{SendOrder( \link{Order}* order )} \tab \code{void}                \tab send order to exchange
+#'  \strong{Name}                           \tab \strong{Return Type}       \tab \strong{Description}               \cr
+#'  \code{onCandle( \link{Candle} candle )} \tab \code{std::function}       \tab called on new candle event         \cr
+#'  \code{onTick( \link{Tick} tick )}       \tab \code{std::function}       \tab called on new tick event           \cr
+#'  \code{onMarketOpen()}                   \tab \code{std::function}       \tab called on trading hours start      \cr
+#'  \code{onMarketClose()}                  \tab \code{std::function}       \tab called on trading hours end        \cr
+#'  \code{onIntervalOpen()}                 \tab \code{std::function}       \tab called on intervals start          \cr
+#'  \code{onIntervalClose()}                \tab \code{std::function}       \tab called on intervals end            \cr
+#'  \code{Feed( \link{Tick} tick )}         \tab \code{void}                \tab process by individual tick         \cr
+#'  \code{Feed( Rcpp::DataFrame ticks )}    \tab \code{void}                \tab batch process, see 'Ticks' section \cr
+#'  \code{SendOrder( \link{Order}* order )} \tab \code{void}                \tab send order to exchange             \cr
 #'
-#' \cr \code{SetCost( \link{Cost} cost )}      \tab \code{void}                \tab set trading costs
-#' \cr \code{SetCost( Rcpp::List cost )}       \tab \code{void}                \tab see 'cost' in 'Options' section
-#' \cr \code{SetStop( Rcpp::List stop )}       \tab \code{void}                \tab see 'stop' in 'Options' section
-#' \cr \code{SetStartTradingTime( double t )}  \tab \code{void}                \tab see 'trade_start' in 'Options' section
-#' \cr \code{SetLatencyReceive( double x )}    \tab \code{void}                \tab see 'latency_receive' in 'Options' section
-#' \cr \code{SetLatencySend( double x )}       \tab \code{void}                \tab see 'latency_send' in 'Options' section
-#' \cr \code{SetLatency( double x )}           \tab \code{void}                \tab see 'latency' in 'Options' section
-#' \cr \code{SetTradingHours( double start, double end )}
-#'                                             \tab \code{void}                \tab see 'trading_hours' in 'Options' section
-#' \cr \code{SetPriceStep( double priceStep )} \tab \code{void}                \tab see 'price_step' in 'Options' section
-#' \cr \code{SetExecutionType( ExecutionType executionType )}
-#'                                             \tab \code{void}                \tab see 'execution_type' in 'Options' section
-#' \cr \code{SetExecutionType( std::string executionType )}
-#'                                             \tab \code{void}                \tab see 'execution_type' in 'Options' section
-#' \cr \code{SetIntervals( std::vector<double> starts, std::vector<double> ends )}
-#'                                             \tab \code{void}                \tab see 'intervals' in 'Options' section
-#' \cr \code{AllowLimitToHitMarket()}          \tab \code{void}                \tab see 'allow_limit_to_hit_market' in 'Options' section
-#' \cr \code{SetOptions( Rcpp::List options )} \tab \code{void}                \tab see 'Options' section
-#' \cr \code{StopTrading()}                    \tab \code{void}                \tab if called trading stop triggered. See 'stop' in 'Options' section
-#' \cr \code{CanTrade()}                       \tab \code{bool}                \tab check if trading not stopped
-#' \cr \code{IsTradingHoursSet()}              \tab \code{bool}                \tab check if trading hours set
-#' \cr \code{CancelOrders()}                   \tab \code{void}                \tab cancel active orders
-#' \cr \code{GetCandle()}                      \tab \code{Candle}              \tab get current candle
-#' \cr \code{GetPosition()}                    \tab \code{int}                 \tab total executed position, positive means long, negative means short
-#' \cr \code{GetPositionPlanned()}             \tab \code{int}                 \tab total number of orders processing ( not executed or cancelled yet )
-#' \cr \code{GetMarketValue()}                 \tab \code{double}              \tab total portfolio percent value ( initial value is 0 )
-#' \cr \code{GetCandles()}                     \tab \code{Rcpp::List}          \tab candles history, see 'Candles' section
-#' \cr \code{GetOrders()}                      \tab \code{Rcpp::List}          \tab orders history, see 'Orders' section
-#' \cr \code{GetTrades()}                      \tab \code{Rcpp::List}          \tab trades history, see 'Trades' section
-#' \cr \code{GetSummary()}                     \tab \code{Rcpp::List}          \tab trades summary, see 'Summary' section
-#' \cr \code{GetOnCandleMarketValueHistory()}  \tab \code{std::vector<double>} \tab vector of portfolio value history recalculated on candle complete
-#' \cr \code{GetOnCandleDrawDownHistory()}     \tab \code{std::vector<double>} \tab vector of portfolio drawdown history recalculated on candle complete
-#' \cr \code{GetOnDayClosePerformanceHistory()}\tab \code{Rcpp::List}          \tab daily performance history, see 'Daily Performance' section
-#' \cr \code{Reset()}                          \tab \code{void}                \tab resets to initial state
+#'  \code{SetCost( \link{Cost} cost )}      \tab \code{void}                \tab set trading costs                  \cr
+#'  \code{SetCost( Rcpp::List cost )}       \tab \code{void}                \tab see 'cost' in 'Options' section    \cr
+#'  \code{SetStop( Rcpp::List stop )}       \tab \code{void}                \tab see 'stop' in 'Options' section    \cr
+#'  \code{SetStartTradingTime( double t )}  \tab \code{void}                \tab see 'trade_start' in 'Options' section     \cr
+#'  \code{SetLatencyReceive( double x )}    \tab \code{void}                \tab see 'latency_receive' in 'Options' section \cr
+#'  \code{SetLatencySend( double x )}       \tab \code{void}                \tab see 'latency_send' in 'Options' section    \cr
+#'  \code{SetLatency( double x )}           \tab \code{void}                \tab see 'latency' in 'Options' section \cr
+#'  \code{SetTradingHours( double start, double end )}
+#'                                          \tab \code{void}                \tab see 'trading_hours' in 'Options' section  \cr
+#'  \code{SetPriceStep( double priceStep )} \tab \code{void}                \tab see 'price_step' in 'Options' section     \cr
+#'  \code{SetExecutionType( ExecutionType executionType )}
+#'                                          \tab \code{void}                \tab see 'execution_type' in 'Options' section \cr
+#'  \code{SetExecutionType( std::string executionType )}
+#'                                          \tab \code{void}                \tab see 'execution_type' in 'Options' section \cr
+#'  \code{SetIntervals( std::vector<double> starts, std::vector<double> ends )}
+#'                                          \tab \code{void}                \tab see 'intervals' in 'Options' section                                \cr
+#'  \code{AllowLimitToHitMarket()}          \tab \code{void}                \tab see 'allow_limit_to_hit_market' in 'Options' section                \cr
+#'  \code{AllowExactStop()}                 \tab \code{void}                \tab see 'allow_exact_stop' in 'Options' section                         \cr
+#'  \code{SetOptions( Rcpp::List options )} \tab \code{void}                \tab see 'Options' section                                               \cr
+#'  \code{StopTrading()}                    \tab \code{void}                \tab if called trading stop triggered. See 'stop' in 'Options' section   \cr
+#'  \code{CanTrade()}                       \tab \code{bool}                \tab check if trading not stopped                                        \cr
+#'  \code{IsTradingHoursSet()}              \tab \code{bool}                \tab check if trading hours set                                          \cr
+#'  \code{CancelOrders()}                   \tab \code{void}                \tab cancel active orders                                                \cr
+#'  \code{GetCandle()}                      \tab \code{Candle}              \tab get current candle                                                  \cr
+#'  \code{GetPosition()}                    \tab \code{int}                 \tab total executed position, positive means long, negative means short  \cr
+#'  \code{GetPositionPlanned()}             \tab \code{int}                 \tab total number of orders processing ( not executed or cancelled yet ) \cr
+#'  \code{GetMarketValue()}                 \tab \code{double}              \tab total portfolio percent value ( initial value is 0 )                \cr
+#'  \code{GetCandles()}                     \tab \code{Rcpp::List}          \tab candles history, see 'Candles' section                              \cr
+#'  \code{GetOrders()}                      \tab \code{Rcpp::List}          \tab orders history, see 'Orders' section                                \cr
+#'  \code{GetTrades()}                      \tab \code{Rcpp::List}          \tab trades history, see 'Trades' section                                \cr
+#'  \code{GetSummary()}                     \tab \code{Rcpp::List}          \tab trades summary, see 'Summary' section                               \cr
+#'  \code{GetOnCandleMarketValueHistory()}  \tab \code{std::vector<double>} \tab vector of portfolio value history recalculated on candle complete   \cr
+#'  \code{GetOnCandleDrawDownHistory()}     \tab \code{std::vector<double>} \tab vector of portfolio drawdown history recalculated on candle complete\cr
+#'  \code{GetOnDayClosePerformanceHistory()}\tab \code{Rcpp::List}          \tab daily performance history, see 'Daily Performance' section          \cr
+#'  \code{Reset()}                          \tab \code{void}                \tab resets to initial state
 #' }
 #' @example /inst/examples/sma_crossover.R
 #' @example /inst/examples/bbands.R
@@ -91,39 +92,39 @@
 #' @section Ticks:
 #' Ticks must be a data.frame/data.table with at least the following columns:
 #' \tabular{ll}{
-#' \cr \strong{Name} \tab \strong{Description}
-#' \cr time          \tab time
-#' \cr price         \tab price
-#' \cr volume        \tab volume
+#'  \strong{Name} \tab \strong{Description} \cr
+#'  time          \tab time                 \cr
+#'  price         \tab price                \cr
+#'  volume        \tab volume
 #' }
 #' tick id is ticks row number.
 #' @section Candles:
 #' Candles returned as data.table with the following columns:
 #' \tabular{ll}{
-#' \cr \strong{Name} \tab \strong{Description}
-#' \cr time          \tab time when formed
-#' \cr open          \tab first tick price
-#' \cr high          \tab maximum tick price
-#' \cr low           \tab minimum tick price
-#' \cr close         \tab last tick price
-#' \cr volume        \tab total volume traded
-#' \cr id            \tab tick id when formed ( first tick after time formed )
+#'  \strong{Name} \tab \strong{Description} \cr
+#'  time          \tab time when formed     \cr
+#'  open          \tab first tick price     \cr
+#'  high          \tab maximum tick price   \cr
+#'  low           \tab minimum tick price   \cr
+#'  close         \tab last tick price      \cr
+#'  volume        \tab total volume traded  \cr
+#'  id            \tab tick id when formed ( first tick after time formed )
 #' }
 #' @section Orders:
 #' Orders returned as data.table with the following columns:
 #' \tabular{ll}{
-#' \cr \strong{Name}  \tab \strong{Description}
-#' \cr id_trade       \tab trade id
-#' \cr id_sent        \tab tick id when order was sent to exchange
-#' \cr id_processed   \tab tick id when enter order execution or cancelled confirmation was received ( first tick after \code{time_processed} )
-#' \cr time_sent      \tab time when order was sent to exchange
-#' \cr time_processed \tab time when order execution or cancelled confirmation was received
-#' \cr price_init     \tab initial price
-#' \cr price_exec     \tab execution price
-#' \cr side           \tab \code{buy}/\code{sell}
-#' \cr type           \tab \code{limit}/\code{market}
-#' \cr state          \tab \code{new}/\code{registered}/\code{executed}/\code{cancelling}/\code{cancelled}
-#' \cr comment        \tab comment
+#'  \strong{Name}  \tab \strong{Description}                                                            \cr
+#'  id_trade       \tab trade id                                                                        \cr
+#'  id_sent        \tab tick id when order was sent to exchange                                         \cr
+#'  id_processed   \tab tick id when enter order execution or cancelled confirmation was received ( first tick after \code{time_processed} ) \cr
+#'  time_sent      \tab time when order was sent to exchange                                            \cr
+#'  time_processed \tab time when order execution or cancelled confirmation was received                \cr
+#'  price_init     \tab initial price                                                                   \cr
+#'  price_exec     \tab execution price                                                                 \cr
+#'  side           \tab \code{buy}/\code{sell}                                                          \cr
+#'  type           \tab \code{limit}/\code{market}/\code{stop}/\code{trail}                             \cr
+#'  state          \tab \code{new}/\code{registered}/\code{executed}/\code{cancelling}/\code{cancelled} \cr
+#'  comment        \tab comment
 #' }
 #' @section Trades:
 #' Two orders are combined into trade by trade id. The first and the second orders are called enter and exit respectively. \cr
@@ -136,71 +137,71 @@
 #' }
 #' Trades returned as data.table with the following columns:
 #' \tabular{ll}{
-#' \cr \strong{Name} \tab \strong{Description}
-#' \cr id_trade      \tab trade id
-#' \cr id_sent       \tab tick id when enter order was sent to exchange
-#' \cr id_enter      \tab tick id when enter order execution confirmation was received ( first tick after enter \code{time_executed} )
-#' \cr id_exit       \tab tick id when exit order execution confirmation was received ( first tick after exit \code{time_executed} )
-#' \cr time_sent     \tab time when enter order sent to exchange
-#' \cr time_enter    \tab time when enter order execution confirmation was received
-#' \cr time_exit     \tab time when exit order execution confirmation was received
-#' \cr side          \tab side \code{long}/\code{short}
-#' \cr price_enter   \tab enter order execution price
-#' \cr price_exit    \tab exit order execution price
-#' \cr pnl           \tab trade pnl net
-#' \cr mtm           \tab mark-to-market
-#' \cr mtm_min       \tab min mark-to-market
-#' \cr mtm_max       \tab max mark-to-market
-#' \cr cost          \tab absolute trading cost
-#' \cr pnl_rel       \tab trade pnl net in basis points
-#' \cr mtm_rel       \tab mark-to-market in basis points
-#' \cr mtm_min_rel   \tab min mark-to-market in basis points
-#' \cr mtm_max_rel   \tab max mark-to-market in basis points
-#' \cr cost_rel      \tab relative trading cost in basis points
-#' \cr state         \tab \code{new}/\code{opened}/\code{closed}
+#'  \strong{Name} \tab \strong{Description}                                      \cr
+#'  id_trade      \tab trade id                                                  \cr
+#'  id_sent       \tab tick id when enter order was sent to exchange             \cr
+#'  id_enter      \tab tick id when enter order execution confirmation was received ( first tick after enter \code{time_executed} ) \cr
+#'  id_exit       \tab tick id when exit order execution confirmation was received ( first tick after exit \code{time_executed} )   \cr
+#'  time_sent     \tab time when enter order sent to exchange                    \cr
+#'  time_enter    \tab time when enter order execution confirmation was received \cr
+#'  time_exit     \tab time when exit order execution confirmation was received  \cr
+#'  side          \tab side \code{long}/\code{short}                             \cr
+#'  price_enter   \tab enter order execution price                               \cr
+#'  price_exit    \tab exit order execution price                                \cr
+#'  pnl           \tab trade pnl net                                             \cr
+#'  mtm           \tab mark-to-market                                            \cr
+#'  mtm_min       \tab min mark-to-market                                        \cr
+#'  mtm_max       \tab max mark-to-market                                        \cr
+#'  cost          \tab absolute trading cost                                     \cr
+#'  pnl_rel       \tab trade pnl net in basis points                             \cr
+#'  mtm_rel       \tab mark-to-market in basis points                            \cr
+#'  mtm_min_rel   \tab min mark-to-market in basis points                        \cr
+#'  mtm_max_rel   \tab max mark-to-market in basis points                        \cr
+#'  cost_rel      \tab relative trading cost in basis points                     \cr
+#'  state         \tab \code{new}/\code{opened}/\code{closed}
 #' }
 #' @section Summary:
 #' Back test summary statistics:
 #' \tabular{ll}{
-#' \cr \strong{Name} \tab \strong{Description}
-#' \cr from          \tab first tick time
-#' \cr to            \tab last tick time
-#' \cr days_tested   \tab number of trading days tested
-#' \cr days_traded   \tab number of trading days traded ( at least one order was executed )
-#' \cr n_per_day     \tab number of trades per day
-#' \cr n             \tab number of trades
-#' \cr n_long        \tab number of long trades
-#' \cr n_short       \tab number of short trades
-#' \cr n_win         \tab number of winning trades
-#' \cr n_loss        \tab number of loosing trades
-#' \cr pct_win       \tab percent of winning trades
-#' \cr pct_loss      \tab percent of loosing trades
-#' \cr avg_win       \tab average winning trade in basis points
-#' \cr avg_loss      \tab average loosing trade in basis points
-#' \cr avg_pnl       \tab average trade pnl in basis points
-#' \cr win           \tab total won in percent
-#' \cr loss          \tab total lost in percent
-#' \cr pnl           \tab total pnl in percent
-#' \cr max_dd        \tab maximum drawdown in percent
-#' \cr max_dd_start  \tab time the maximum drawdown started
-#' \cr max_dd_end    \tab time the maximum drawdown recovered
-#' \cr max_dd_length \tab number of calendar days in the maximum drawdown period
-#' \cr sharpe        \tab annualized Sharpe ratio calulated on daily returns
-#' \cr sortino       \tab annualized Sortino ratio calulated on daily returns
-#' \cr r_squared     \tab R Squared calulated on daily PnL values
-#' \cr avg_dd        \tab average drawdown calulated on daily drawdown history
+#'  \strong{Name} \tab \strong{Description}                                              \cr
+#'  from          \tab first tick time                                                   \cr
+#'  to            \tab last tick time                                                    \cr
+#'  days_tested   \tab number of trading days tested                                     \cr
+#'  days_traded   \tab number of trading days traded ( at least one order was executed ) \cr
+#'  n_per_day     \tab number of trades per day                                          \cr
+#'  n             \tab number of trades                                                  \cr
+#'  n_long        \tab number of long trades                                             \cr
+#'  n_short       \tab number of short trades                                            \cr
+#'  n_win         \tab number of winning trades                                          \cr
+#'  n_loss        \tab number of loosing trades                                          \cr
+#'  pct_win       \tab percent of winning trades                                         \cr
+#'  pct_loss      \tab percent of loosing trades                                         \cr
+#'  avg_win       \tab average winning trade in basis points                             \cr
+#'  avg_loss      \tab average loosing trade in basis points                             \cr
+#'  avg_pnl       \tab average trade pnl in basis points                                 \cr
+#'  win           \tab total won in percent                                              \cr
+#'  loss          \tab total lost in percent                                             \cr
+#'  pnl           \tab total pnl in percent                                              \cr
+#'  max_dd        \tab maximum drawdown in percent                                       \cr
+#'  max_dd_start  \tab time the maximum drawdown started                                 \cr
+#'  max_dd_end    \tab time the maximum drawdown recovered                               \cr
+#'  max_dd_length \tab number of calendar days in the maximum drawdown period            \cr
+#'  sharpe        \tab annualized Sharpe ratio calulated on daily returns                \cr
+#'  sortino       \tab annualized Sortino ratio calulated on daily returns               \cr
+#'  r_squared     \tab R Squared calulated on daily PnL values                           \cr
+#'  avg_dd        \tab average drawdown calulated on daily drawdown history
 #' }
 #'
 #' @section Daily Performance:
 #' Back test daily performance history:
 #' \tabular{ll}{
-#' \cr \strong{Name} \tab \strong{Description}
-#' \cr date          \tab date
-#' \cr return        \tab return
-#' \cr pnl           \tab cumulative pnl
-#' \cr drawdown      \tab drawdown
-#' \cr n_per_day     \tab number of closed trades
-#' \cr avg_pnl       \tab average trade pnl
+#'  \strong{Name} \tab \strong{Description}    \cr
+#'  date          \tab date                    \cr
+#'  return        \tab return                  \cr
+#'  pnl           \tab cumulative pnl          \cr
+#'  drawdown      \tab drawdown                \cr
+#'  n_per_day     \tab number of closed trades \cr
+#'  avg_pnl       \tab average trade pnl
 #' }
 #'
 #' @section Options:
@@ -237,6 +238,9 @@
 #'  }
 #'  \item{\strong{allow_limit_to_hit_market}}{
 #'    if TRUE, limit order execution price set to market price if executed on same tick as registered.
+#'  }
+#'  \item{\strong{allow_exact_stop}}{
+#'    if TRUE, stop order executed at set price.
 #'  }
 #'  \item{\strong{price_step}}{
 #'    if positive, limit order init price rounded to \code{price_step} down for buy orders and up for sell orders before placement.

@@ -380,6 +380,7 @@ private:
     double latencySend = 0.2;
     double latencyReceive = 0.1;
     Processor processor( 10, latencySend, latencyReceive );
+    processor.AllowLimitToHitMarket();
 
     Order* order = new Order( OrderSide::BUY, OrderType::LIMIT, 10, "long" );
 

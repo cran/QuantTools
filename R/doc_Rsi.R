@@ -25,12 +25,12 @@
 #'
 #' @section Public Members and Methods:
 #' \tabular{lll}{
-#' \cr \strong{Name}               \tab \strong{Return Type}       \tab \strong{Description}
-#' \cr \code{Add( double value )}  \tab \code{void}                \tab update indicator
-#' \cr \code{Reset()}              \tab \code{void}                \tab reset to initial state
-#' \cr \code{IsFormed()}           \tab \code{bool}                \tab is indicator value valid?
-#' \cr \code{GetValue()}           \tab \code{double}              \tab return value
-#' \cr \code{GetHistory()}         \tab \code{std::vector<double>} \tab return values history
+#'  \strong{Name}               \tab \strong{Return Type}       \tab \strong{Description}      \cr
+#'  \code{Add( double value )}  \tab \code{void}                \tab update indicator          \cr
+#'  \code{Reset()}              \tab \code{void}                \tab reset to initial state    \cr
+#'  \code{IsFormed()}           \tab \code{bool}                \tab is indicator value valid? \cr
+#'  \code{GetValue()}           \tab \code{double}              \tab return value              \cr
+#'  \code{GetHistory()}         \tab \code{std::vector<double>} \tab return values history
 #' }
 #'
 #' @name Rsi

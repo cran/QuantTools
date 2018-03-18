@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Stanislav Kovalevsky
+// Copyright (C) 2016-2018 Stanislav Kovalevsky
 //
 // This file is part of QuantTools.
 //
@@ -42,7 +42,7 @@ private:
 
   std::vector< std::string > OrderSideString  = { "buy", "sell" };
   std::vector< std::string > TradeSideString  = { "long", "short" };
-  std::vector< std::string > OrderTypeString  = { "market", "limit" };
+  std::vector< std::string > OrderTypeString  = { "market", "limit", "stop", "trail" };
   std::vector< std::string > OrderStateString = { "new", "registered", "executed", "cancelling", "cancelled" };
   std::vector< std::string > TradeStateString = { "new", "opened", "closed", "closing" };
 
@@ -73,11 +73,14 @@ private:
   double        stopTradingLoss       = NAN;
   bool          isTradingStopped      = false;
   bool          allowLimitToHitMarket = false;
+  bool          allowExactStop        = false;
   double        priceStep             = 0;
   ExecutionType executionType         = ExecutionType::TRADE;
 
   double bid;
   double ask;
+
+  double close;
 
   bool isInInterval = false;
   std::vector<double> intervalStarts;
@@ -86,13 +89,12 @@ private:
 
   void FormCandle( const Tick& tick ) {
 
-    bool startOver = candle.time != floor( tick.time / timeFrame ) * timeFrame + timeFrame;
-
-    if( startOver and candle.time != 0 ) {
+    if( candle.IsFormed( tick ) ) {
 
       if( onCandle != nullptr ) onCandle( candle );
 
       candles.push_back( candle );
+      if( not std::isnan( candle.close ) ) close = candle.close;
 
       statistics.Update( candle );
 
@@ -231,6 +233,9 @@ public:
   void AllowLimitToHitMarket() {
     allowLimitToHitMarket = true;
   }
+  void AllowExactStop() {
+    allowExactStop = true;
+  }
 
   void SetOptions( Rcpp::List options ) {
 
@@ -248,6 +253,7 @@ public:
     bool hasIntervals      = std::find( names.begin(), names.end(), "intervals"       ) != names.end();
 
     bool hasAllowLimitToHitMarket = std::find( names.begin(), names.end(), "allow_limit_to_hit_market"   ) != names.end();
+    bool hasAllowExactStop        = std::find( names.begin(), names.end(), "allow_exact_stop"            ) != names.end();
 
     if( hasTradingHours ) {
 
@@ -275,6 +281,7 @@ public:
 
     }
     if( hasAllowLimitToHitMarket ) if( options["allow_limit_to_hit_market" ] ) AllowLimitToHitMarket();
+    if( hasAllowExactStop        ) if( options["allow_exact_stop"          ] ) AllowExactStop       ();
     if( hasIntervals ) {
 
       Rcpp::List intervals = options[ "intervals" ];
@@ -292,8 +299,17 @@ public:
     if( statistics.drawDown < stopTradingDrawdown ) StopTrading();
     if( statistics.marketValue < stopTradingLoss )  StopTrading();
 
-    if( onMarketClose != nullptr and alarmMarketClose.IsRinging( tick.time ) ) onMarketClose();
-    if( onMarketOpen  != nullptr and alarmMarketOpen .IsRinging( tick.time ) ) onMarketOpen();
+    if( alarmMarketOpen.GetTime() < alarmMarketClose.GetTime() ) {
+
+      if( onMarketOpen  != nullptr and alarmMarketOpen .IsRinging( tick.time ) ) onMarketOpen();
+      if( onMarketClose != nullptr and alarmMarketClose.IsRinging( tick.time ) ) onMarketClose();
+
+    } else {
+
+      if( onMarketClose != nullptr and alarmMarketClose.IsRinging( tick.time ) ) onMarketClose();
+      if( onMarketOpen  != nullptr and alarmMarketOpen .IsRinging( tick.time ) ) onMarketOpen();
+
+    }
 
     if( intervalId < intervalEnds.size() ) {
 
@@ -323,7 +339,7 @@ public:
 
     FormCandle( tick );
 
-    if( onTick != nullptr ) onTick( tick );
+    if( onTick != nullptr and not tick.system ) onTick( tick );
 
     // allocate memory to prevent iterators invalidation in case some orders have callbacks which send new orders
     auto reserve = orders.size() < 10 ? 20 : orders.size() * 2;
@@ -337,7 +353,7 @@ public:
 
       statistics.Update( order );
 
-      if( trades.count( order->idTrade ) == 0 ) {
+      if( trades.count( order->idTrade ) == 0 and tradesProcessed.count( order->idTrade ) == 0 ) {
 
         Trade* trade    = new Trade;
 
@@ -351,7 +367,7 @@ public:
 
       } else {
 
-        Trade* trade = trades[ order->idTrade ];
+        Trade* trade = tradesProcessed.count( order->idTrade ) != 0 ? tradesProcessed[ order->idTrade ] : trades[ order->idTrade ];
 
         if( order->IsExecuted() ) {
 
@@ -410,7 +426,7 @@ public:
         if( nNights > 0 ) {
 
           trade->cost += nNights * ( trade->IsLong() ? cost.longAbs : cost.shortAbs );
-          trade->cost += nNights * ( trade->IsLong() ? cost.longRel : cost.shortRel ) * candles.back().close * cost.pointValue;
+          trade->cost += nNights * ( trade->IsLong() ? cost.longRel : cost.shortRel ) * close * cost.pointValue;
 
         }
 
@@ -572,6 +588,7 @@ public:
     }
 
     order->allowLimitToHitMarket = allowLimitToHitMarket;
+    order->allowExactStop        = allowExactStop;
     order->executionType = executionType;
 
     if( executionType == ExecutionType::BBO ) {

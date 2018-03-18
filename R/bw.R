@@ -135,16 +135,16 @@ bw = function( x, interval ) {
       # dt
       tlim[2] = tlim[1] +
         if( nchar > 18 ) as.difftime( 1 , units = 'secs' ) else
-          if( nchar > 17 ) as.difftime( 10, units = 'secs' ) else
-            if( nchar > 15 ) as.difftime( 1 , units = 'mins' ) else
-              if( nchar > 14 ) as.difftime( 10, units = 'mins' ) else
-                as.difftime( 1, units = 'hours' )
+        if( nchar > 17 ) as.difftime( 10, units = 'secs' ) else
+        if( nchar > 15 ) as.difftime( 1 , units = 'mins' ) else
+        if( nchar > 14 ) as.difftime( 10, units = 'mins' ) else
+        as.difftime( 1, units = 'hours' )
 
     } else
       # dt/dt
       if( nchar[2] > 12 ) tlim = fasttime::fastPOSIXct( from_to, tz = tzone ) else
-        # dt/t
-        if( nchar[2] > 1  ) tlim = fasttime::fastPOSIXct( c( from_to[1], paste( substr( from_to[1], 1, 10 ), from_to[2] ) ), tz = tzone )
+      # dt/t
+      if( nchar[2] > 1  ) tlim = fasttime::fastPOSIXct( c( from_to[1], paste( substr( from_to[1], 1, 10 ), from_to[2] ) ), tz = tzone )
 
   }
   if( nchar[1] < 11 ) {
@@ -157,31 +157,31 @@ bw = function( x, interval ) {
     if( nchar[1] > 9 ) {
       tlim = as.Date( from_to[1] ) + 0:1
     } else
-      if( nchar[1] > 6 ) {
-        tlim = rep( as.POSIXlt( paste0( from_to[1], '-01' ), tz = tzone ), 2 )
-        tlim[2]$mon = tlim[2]$mon + 1
-      } else
-        if( nchar[1] > 3 ) {
-          tlim = rep( as.POSIXlt( paste0( from_to[1], '-01-01' ), tz = tzone ), 2 )
-          tlim[2]$year = tlim[2]$year + 1
-        }
+    if( nchar[1] > 6 ) {
+      tlim = rep( as.POSIXlt( paste0( from_to[1], '-01' ), tz = tzone ), 2 )
+      tlim[2]$mon = tlim[2]$mon + 1
+    } else
+    if( nchar[1] > 3 ) {
+      tlim = rep( as.POSIXlt( paste0( from_to[1], '-01-01' ), tz = tzone ), 2 )
+      tlim[2]$year = tlim[2]$year + 1
+    }
 
-    if( length( nchar ) == 2 )
+    if( length( nchar ) == 2 ) {
       if( nchar[2] < 11 ) {
         # d/d
         if( nchar[2] > 9 ) {
-          tlim[2] = as.Date( from_to[2] )
+          tlim[2] = as.Date( from_to[2] ) + 1
         } else
-          if( nchar[2] > 6 ) {
-            tlim[2] = as.POSIXlt( paste0( from_to[2], '-01' ), tz = tzone )
-            tlim[2]$mon = tlim[2]$mon + 1
-          } else
-            if( nchar[2] > 3 ) {
-              tlim[2] = as.POSIXlt( paste0( from_to[2], '-01-01' ), tz = tzone )
-              tlim[2]$year = tlim[2]$year + 1
-            }
-
+        if( nchar[2] > 6 ) {
+          tlim[2] = as.POSIXlt( paste0( from_to[2], '-01' ), tz = tzone )
+          tlim[2]$mon = tlim[2]$mon + 1
+        } else
+        if( nchar[2] > 3 ) {
+          tlim[2] = as.POSIXlt( paste0( from_to[2], '-01-01' ), tz = tzone )
+          tlim[2]$year = tlim[2]$year + 1
+        }
       }
+    }
     if( !is.null( tlim ) ) tlim = fasttime::fastPOSIXct( tlim, tz = tzone )
   }
   tlim
