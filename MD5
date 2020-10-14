@@ -1,4 +1,4 @@
-9b0a83d939c355ad7d8e75da67583dda *DESCRIPTION
+754b52dca8e037d51cff9e2c4f59da44 *DESCRIPTION
 189c58c0c3490fc1ffb1d1cd05efca4a *NAMESPACE
 2ce0d086b650f48494778f27d54842bc *NEWS.md
 951f954f0ba0a3f5e9559e1fcd0217fe *R/RcppExports.R
@@ -54,7 +54,7 @@ b64c721c8adcf01512f3b5810675bccb *R/to_ticks.R
 144f073372edda934ebcbe26c7fe689d *R/wo.R
 318166756df778176cd26e00c9394aea *README.md
 2722d8ebede0e8c22b01639bece1ed49 *data/datalist
-ffdc039fc377c2665749b6c3af0c25ed *data/ticks.RData
+0d87238253d746356f55647cb8dbdcd0 *data/ticks.RData
 c44496f2e792a90a3e5ccad7db5d76f7 *inst/examples/bbands.R
 36f17cd1e2b2b59a0e302d4843d2c039 *inst/examples/bbands.cpp
 a4f18bbacb8cf3ca72895d6f18606047 *inst/examples/bbands_market_maker.R
@@ -62,7 +62,7 @@ a4f18bbacb8cf3ca72895d6f18606047 *inst/examples/bbands_market_maker.R
 0740b0eeec216a18ca1c51045a1e4532 *inst/examples/sma_crossover.R
 b4e0fc51667edfe5f9fe08d9cf9e807c *inst/examples/sma_crossover.cpp
 fb749aff81621363c8a51d3c18df26c4 *inst/include/Alarm.h
-498508627d199005876fbc6832d1f47c *inst/include/BackTest.h
+c6c2a4da0599d333dc569676247ffd9c *inst/include/BackTest.h
 01349746da186c233b43216d727c293d *inst/include/BackTest/Candle.h
 e621af554d574f23891bc8eccaa47114 *inst/include/BackTest/Cost.h
 6d38206d81b4653ca2eb9ca47e829f1b *inst/include/BackTest/Order.h
